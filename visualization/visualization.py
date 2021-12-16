@@ -1,4 +1,5 @@
 import plotly.graph_objects as go
+import numpy as np
 
 def boxplot(df, title='Data Standarized'):
 
@@ -134,3 +135,69 @@ def traces(df, split=0.9):
     fig.update_yaxes({'title':'Units'})
     #fig.write_html("./images/data.html")
     fig.show()
+
+def plot_predictions(window):
+    samples=[i for i in window.test.unbatch().batch(1)] #make batches of one sample
+    *_, (inputs, labels) = iter(window.test.unbatch().batch(len(samples)))#It takes only the last batch (time_sequences, features). All samples of seq. within one batch
+    samples=len(inputs)*(window.total_window_size-(window.total_window_size-window.label_width)) #Total windows=(samples-overlapping)/(window size-overlapping)
+
+    # Initialize figure
+    fig = go.Figure()
+
+    #Add Labels
+    labels = np.array([window.test_df.index[n:n+window.label_width] for n in range(window.input_width, samples, window.label_width)]).flatten() #label_width=stride
+    fig.add_trace(
+        go.Scatter(x=labels, 
+                y=window.test_df[window.label_columns[0]][labels],
+                name="Real",
+                mode='lines',
+                line=dict(color="cyan", dash='solid')))
+    
+    #Add Predictions
+    if window.models is not None:
+        nmodels=len(window.models)
+        for name, model in window.models.items():
+            predictions = model(inputs).numpy().flatten()
+            fig.add_trace(
+            go.Scatter(x=labels, 
+                    y=predictions,
+                    name=name,
+                    visible=False,
+                    mode='lines',
+                    line=dict(color="orange")))
+        
+        #fig.update_traces(visible=True, selector=dict(name=model.name))
+
+        fig.update_layout( title_text='Window horizon: '+str(window.input_width)+'I/'+str(window.label_width)+'O')
+
+    #Create a list with traces visibilty
+    visibility=[True]+[False]*nmodels
+    visible=visibility.copy()
+
+    #Create a list with buttons
+    buttons=[]
+    for index, name in enumerate(window.models):
+        visible[index+1]=True
+        buttons.append({'method': 'update',
+                            'label': name,
+                            'args': [
+                                    {'visible': visible},
+                                    ]
+                        })
+        visible=visibility.copy()
+
+    #Create layout update
+    updatemenus=[{
+#                 'active':1,
+            'buttons': buttons,
+            'type':'buttons',
+#           'type':'dropdown',
+            'direction': 'down',
+            'showactive': True,}]
+
+    fig.update_layout(updatemenus=updatemenus)
+    fig.update_xaxes({'title':'Samples'})
+    fig.update_yaxes({'title':window.label_columns[0]+' (std)'})
+
+    fig.show()
+    return fig

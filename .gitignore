@@ -10,6 +10,7 @@ __pycache__/
 .Python
 Datos_SOC.csv
 results/
+main.ipynb
 build/
 develop-eggs/
 dist/

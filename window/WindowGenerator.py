@@ -48,7 +48,7 @@ class WindowGenerator():
 
     def split_window(self, features):
         #Splits a raw tensor of samples in inputs and labels using arrays of indices
-        inputs = features[:,self.input_slice, :] #Split tensor using inputs indices across samples dimension (Could it be )
+        inputs = features[:,self.input_slice, :] #Split tensor using inputs indices across samples dimension
         labels = features[:,self.labels_slice, :] #Split tensor using label indices across samples dimension
         if self.label_columns is not None:
             #Split tensor using label column name across features dimension
@@ -60,74 +60,6 @@ class WindowGenerator():
         labels.set_shape([None, self.label_width, None])
 
         return inputs, labels
-    
-    def plot_predictions(self, models=None, plot_col='Capacity'):
-        samples=[i for i in self.test.unbatch().batch(1)] #make batches of one sample
-        #inputs, labels = next(iter(self.test.unbatch().batch(len(samples))))
-        *_, (inputs, labels) = iter(self.test.unbatch().batch(len(samples)))#It takes only the last batch (time_sequences, features). All samples of seq. within one batch
-        samples=len(inputs)*(self.total_window_size-(self.total_window_size-self.label_width)) #Total windows=(samples-overlapping)/(window size-overlapping)
-        d = len(self.test_df)-samples #delay of samples which are not enough to slide the window
-
-        # Initialize figure
-        fig = go.Figure()
-
-        #Add Labels
-        labels = np.array([self.test_df.index[n:n+self.label_width] for n in range(self.input_width, samples, self.label_width)]).flatten() #label_width=stride
-        fig.add_trace(
-            go.Scatter(x=labels, 
-                    y=self.test_df[plot_col][labels],
-                    name="Real",
-                    mode='lines',
-                    line=dict(color="cyan", dash='solid')))
-        
-        #Add Predictions
-        if models is not None:
-            nmodels=len(models)
-            for model in models:
-                predictions = model(inputs).numpy().flatten()
-                fig.add_trace(
-                go.Scatter(x=labels, 
-                        y=predictions,
-                        name=model.name,
-                        visible=False,
-                        mode='lines',
-                        line=dict(color="orange")))
-            
-            #fig.update_traces(visible=True, selector=dict(name=model.name))
-
-            fig.update_layout( title_text='Window horizon: '+str(self.input_width)+'I/'+str(self.label_width)+'O')
-
-        #Create a list with traces visibilty
-        visibility=[True]+[False]*nmodels
-        visible=visibility.copy()
-
-        #Create a list with buttons
-        buttons=[]
-        for nmodel in range(1, nmodels):
-            visible[nmodel]=True
-            buttons.append({'method': 'update',
-                             'label': models[nmodel].name,
-                             'args': [
-                                       {'visible': visible},
-                                     ],
-                              })
-            visible=visibility.copy()
-
-        #Create layout update
-        updatemenus=[{
-#                 'active':1,
-                'buttons': buttons,
-                'type':'buttons',
-#               'type':'dropdown',
-                'direction': 'down',
-                'showactive': True,}]
-
-        fig.update_layout(updatemenus=updatemenus)
-        fig.update_xaxes({'title':'Samples'})
-        fig.update_yaxes({'title':'Capacity (std)'})
-
-        fig.show()
-        return fig
         
     def set_batch_size(self, batch_size=32):
         self.batch_size=batch_size
@@ -140,7 +72,7 @@ class WindowGenerator():
             sequence_length=self.total_window_size,
             sequence_stride=self.label_width, #Using label width as stride to avoid overlapping predictions
             shuffle=False, #Doing shuffle here would cause the loss of data sequence missing the tendency, this is not desired
-            batch_size=self.batch_size)#len(data),)#Number of time sequences in each batch, in this case only one batch is used 
+            batch_size=self.batch_size)#Number of time sequences in each batch, in this case only one batch is used 
 
         ds = ds.map(self.split_window)
 
@@ -158,3 +90,7 @@ class WindowGenerator():
     @property
     def test(self):
         return self.make_dataset(self.test_df)
+
+    def save_model(self, model):
+        self.models = getattr(self, 'cv_savings', {})
+        self.models[model.name]=model
