@@ -9,6 +9,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 Datos_SOC.csv
+results/
 build/
 develop-eggs/
 dist/
