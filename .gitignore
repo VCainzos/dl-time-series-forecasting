@@ -2,8 +2,10 @@
 __pycache__/
 *.py[cod]
 *$py.class
+# Ignore all csv files
 *.csv
-.ipynb
+# Ignore all ipynb files
+*.ipynb
 
 # C extensions
 *.so
@@ -11,7 +13,6 @@ __pycache__/
 # Distribution / packaging
 .Python
 results/
-main.ipynb
 build/
 develop-eggs/
 dist/
