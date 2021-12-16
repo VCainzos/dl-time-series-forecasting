@@ -2,13 +2,14 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.csv
+.ipynb
 
 # C extensions
 *.so
 
 # Distribution / packaging
 .Python
-Datos_SOC.csv
 results/
 main.ipynb
 build/
