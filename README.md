@@ -62,7 +62,7 @@ window = WindowGenerator(
     label_columns=['output_variable'])
 ``` 
 Then, create a tuner object of the customized class MyTuner which will be dealing with the hyperparameter optimization.
-`objective` specifies the objective to select the best models, and `max_trials` to the number of different models to try.
+`objective` specifies the criterion to select the best models, and `max_trials` the number of different models to try.
 ```python
 tuner = MyTuner(
     oracle=kt.oracles.RandomSearch(
@@ -78,4 +78,4 @@ best_hps=tuner.get_best_hyperparameters(num_trials=1)[0]
 model_lstm = tuner.hypermodel.build(best_hps)
 ```
 The resulting model is ready to be fitted on the full training set and evaluated on the test set. Thereby, predictions can
-be ploted using the `vs` module functionalities.
+be ploted using the functionality implemented within the `vs` module.
