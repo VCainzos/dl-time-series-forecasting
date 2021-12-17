@@ -37,37 +37,30 @@ pip install plotly==5.4.0`
 
 Import the following libraries:
 
-- visualization module:
+- The visualization module
+- WindowGenerator class
+- A function that creates and returns a Keras model.
+- MyTuner class
+- KerasTuner package
+
 ```python
 import visualization.visualization as vs
-```
-- WindowGenerator class
-```python
 from window.WindowGenerator import *
-```
-- A function already defined that creates and returns a Keras model.
-Using the `hp` argument to define the hyperparameters during model creation.
-```python
 from models.lstm import *
-```
-- MyTuner class
-```python
 from tuner.Tuner import MyTuner
-```
-- KerasTuner package
-```python
 import keras_tuner as kt
 ```
-Once all needed dependencies have been imported, the following steps can be taken. First, create a window object.
+
+Once all aforementioned dependencies have been imported, the following steps can be taken. First, create a window object.
 ```python
 window = WindowGenerator(
-    DataFrame,
+    dataframe,
     input_width=10,
     label_width=10,
     shift=10,
     label_columns=['output_variable'])
 ```
-Then, create a tuner object of the customized class MyTuner which will be dealing with hyperparameter optimization.
+Then, create a tuner object of the customized class MyTuner which will be dealing with the hyperparameter optimization.
 ```python
 tuner = MyTuner(
     oracle=kt.oracles.RandomSearch(
@@ -79,8 +72,8 @@ tuner = MyTuner(
 ```
 Perform the search and build a model with the best configuration
 ```python
-best_hps=tuner1.get_best_hyperparameters(num_trials=1)[0]
-LSTM = tuner.hypermodel.build(best_hps)
+best_hps=tuner.get_best_hyperparameters(num_trials=1)[0]
+model_lstm = tuner.hypermodel.build(best_hps)
 ```
 
 
