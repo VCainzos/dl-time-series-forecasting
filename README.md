@@ -78,4 +78,4 @@ best_hps=tuner.get_best_hyperparameters(num_trials=1)[0]
 model_lstm = tuner.hypermodel.build(best_hps)
 ```
 The resulting model is ready to be fitted on the full training set and evaluated on the test set. Thereby, predictions can
-be ploted using the functionality implemented within the `vs` module.
+be ploted besides traces, boxplots, bar charts with metric results and more, using the functionalities implemented within the `vs` module.
