@@ -1,5 +1,4 @@
 # dl-time-series-forecasting
-Deep Learning for Time Series Forecasting
 
 This repository is an easy-to-use framework which contains util dependencies that may
 help out creating deep learning models as well as optimizing and comparing each other results
@@ -36,10 +35,44 @@ pip install plotly==5.4.0`
 ---
 ## Quick introduction
 
-Import Numpy, TensorFlow, and all preprocessing module dependencies:
+Import the following libraries:
 
+- visualization module:
 ```python
-import numpy as np
-import tensorflow as tf
-from preprocessing.preprocessing import *
+import visualization.visualization as vs
 ```
+- WindowGenerator class
+```python
+from window.WindowGenerator import *
+```
+- A function already defined that creates and returns a Keras model.
+Using the `hp` argument to define the hyperparameters during model creation.
+```python
+from models.lstm import *
+```
+-MyTuner class
+```python
+from tuner.Tuner import MyTuner
+```
+-KerasTuner package
+```python
+import keras_tuner as kt
+```
+Create a window object
+```python
+window = WindowGenerator(
+    DataFrame,
+    input_width=10,
+    label_width=10,
+    shift=10,
+    label_columns=['output_variable'])
+
+Craete a tuner object of the customized class MyTuner
+```python
+tuner = MyTuner(
+    oracle=kt.oracles.RandomSearch(
+        objective=kt.Objective("mean_squared_error", "min"), max_trials=1
+    ),
+    hypermodel=build_model_lstm,
+    window=window
+)
