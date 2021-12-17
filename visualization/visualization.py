@@ -200,4 +200,167 @@ def plot_predictions(window):
     fig.update_yaxes({'title':window.label_columns[0]+' (std)'})
 
     fig.show()
+    return 
+    
+def plot_learning(tuner, title='Model'):
+
+        fig = go.Figure()
+
+        #Create a list with traces visibilty
+        ntrials=len(tuner.cv_savings)
+        visibility=[False]*ntrials*3 #(Training+Validation+TableHp)
+        
+        #Flag to plot initially only the first trial traces
+        flag=True 
+
+        #Create list to add traces of training and validation from each str(ntrial+1)
+        traces=[]
+
+        #Create a list with buttons
+        buttons=[]
+
+        for ntrial in range(ntrials):
+                visible=visibility.copy() #Copy the list, otherwise both objetcs modify each other
+                visible[ntrial*3]=True
+                visible[ntrial*3+1]=True
+                visible[ntrial*3+2]=True
+                
+                if ntrial > 0:
+                        flag=False
+
+                #Traces
+                traces.append(
+                        go.Scatter(y=tuner.cv_savings[str(ntrial+1)]['history'][tuner.oracle.objective.name],
+                        name="Training",
+                        mode='lines',
+                        visible=flag,
+                        line=dict(color="cyan", dash='solid'))
+                )
+                traces.append(
+                        go.Scatter(y=tuner.cv_savings[str(ntrial+1)]['history']['val_'+tuner.oracle.objective.name],
+                        name="Validation",
+                        mode='lines',
+                        visible=flag,
+                        line=dict(color="green", dash='solid'))
+                )
+                traces.append(
+                        go.Table(domain=dict(x=[0.2,0.8]), 
+                        visible=flag,
+                        header=dict(values=[i for i in tuner.cv_savings[str(ntrial+1)]['hp'].keys()], line_width=0),
+                        cells=dict(values=[i for i in tuner.cv_savings[str(ntrial+1)]['hp'].values()], line_width=0))
+                )
+                #Buttons
+                buttons.append({
+                        'method': 'update',
+                        'label': 'Trial '+str(ntrial+1),
+                        'args': [                                     
+                                {'visible': visible}
+                                ]
+                        })
+                
+        fig.add_traces(traces)
+        
+        updatemenus =[{
+        #       'active':1,
+                'buttons': buttons,
+                'type':'buttons',
+        #       'type':'dropdown',
+                'direction': 'down',
+                'showactive': True
+                }]
+
+        fig.add_annotation(
+                text="Hyperparameters set",
+                xref="paper", yref="paper",
+                x=0.5, y=1.1, showarrow=False
+                )
+        
+        #Metric name
+        words=tuner.oracle.objective.name.split('_')
+        if len(words)>1:
+            capital=[]
+            for word in words:
+                capital.append(word[0].upper())
+            name=''.join(capital)
+        else:
+            name=words[0][0].upper()+words[0][1:]
+
+        fig.update_yaxes(title=name)
+        fig.update_xaxes(title='Epochs')
+        fig.update_layout({'title': title})
+        fig.update_layout(updatemenus=updatemenus)
+
+        fig.show()
+        return fig
+
+def plot_metrics(windows, metrics = ['loss', 'mean_absolute_error', 'mean_squared_error', 'mean_absolute_error_denor']):
+    
+    multi_train_performance = {}
+    multi_performance = {}
+
+    for window in windows:
+        multi_train_performance = dict(**multi_train_performance, **window.multi_train_performance)
+        multi_performance = dict(**multi_performance, **window.multi_performance)
+
+    nmetrics = len(metrics)
+    x = [key for key in multi_performance.keys()]
+
+    fig = go.Figure()
+    visible = True
+    
+    for metric_index, metric_name in enumerate(metrics):
+    
+        val_mae = [v[metric_index] for v in multi_train_performance.values()]
+        test_mae = [v[metric_index] for v in multi_performance.values()]
+
+        if metric_index!=0:
+            visible=False
+    
+        fig.add_trace(go.Bar(name='Training', y=val_mae, x=x, visible=visible))
+        fig.add_trace(go.Bar(name='Test', y=test_mae, x=x, visible=visible))
+
+    fig.update_yaxes(dict(ticklabelposition='inside'))
+
+    #Create a list with traces visibilty
+    visibility=[False]*nmetrics*2
+    visible=visibility.copy() #Copy the list, otherwise both objetcs modify each other
+
+    #Create a list with buttons
+    buttons=[]
+    for nmetric in range(nmetrics):
+        visible[nmetric*2]=True
+        visible[nmetric*2+1]=True
+              
+        #Metric name
+        words=metrics[nmetric].split('_')
+        if len(words)>1:
+            capital=[]
+            for word in words:
+                capital.append(word[0].upper())
+            name=''.join(capital)
+        else:
+            name=words[0][0].upper()+words[0][1:]
+
+        buttons.append({'method': 'update',
+                        'label': name,
+                        'args': [
+                                 {'visible': visible},
+                                 {'yaxis': {'ticklabelposition': 'inside'}}
+                                ],
+                        })
+        visible=visibility.copy()
+    
+    updatemenus = [{
+#               'active':1,
+                'buttons': buttons,
+                'type':'buttons',
+#               'type':'dropdown',
+                'direction': 'down',
+                'showactive': True}]
+
+    fig.update_xaxes(title= 'Models')
+    fig.update_layout({'title':'Metrics'})
+    fig.update_layout(updatemenus=updatemenus)
+
+    fig.show()
     return fig

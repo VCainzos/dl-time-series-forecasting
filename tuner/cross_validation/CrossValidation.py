@@ -3,7 +3,7 @@ import tensorflow as tf
 import numpy as np
 
 class CrossValidation():
-    def __init__(self, epochs=50, batch_size=32, folds=5, shuffle=True):
+    def __init__(self, epochs=5, batch_size=32, folds=3, shuffle=True):
         self.epochs=epochs
         self.batch_size=batch_size
         self.folds=folds

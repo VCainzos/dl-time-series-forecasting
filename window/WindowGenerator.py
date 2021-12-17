@@ -4,7 +4,7 @@ from preprocessing.preprocessing import *
 
 class WindowGenerator():
     def __init__(self, df, input_width, label_width, shift, label_columns=None, **kwargs):
-        
+        self.name = str(input_width)+'I/'+str(label_width)+'O'
         self.set_batch_size() #Initialize the batch_size
         # Store the raw data.
         train, test = split(df, **kwargs)
@@ -94,3 +94,10 @@ class WindowGenerator():
     def save_model(self, model):
         self.models = getattr(self, 'cv_savings', {})
         self.models[model.name]=model
+    
+    def save_performance(self, model, training, evaluation):
+        self.multi_train_performance = getattr(self, 'multi_train_performance', {})
+        self.multi_performance = getattr(self, 'multi_performance', {})
+
+        self.multi_train_performance[model.name+' '+self.name]=training
+        self.multi_performance[model.name+' '+self.name]=evaluation
