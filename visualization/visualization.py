@@ -139,7 +139,7 @@ def traces(df, split=0.9):
 def plot_predictions(window):
     samples=[i for i in window.test.unbatch().batch(1)] #make batches of one sample
     *_, (inputs, labels) = iter(window.test.unbatch().batch(len(samples)))#It takes only the last batch (time_sequences, features). All samples of seq. within one batch
-    samples=len(inputs)*(window.total_window_size-(window.total_window_size-window.label_width)) #Total windows=(samples-overlapping)/(window size-overlapping)
+    samples=len(inputs)*(window.total_window_size-(window.total_window_size-window.label_width)) #Total windows=(samples-overlapping)/(window size-overlapping) -> stride=label_width
 
     # Initialize figure
     fig = go.Figure()
@@ -293,7 +293,7 @@ def plot_learning(tuner, title='Model'):
         fig.show()
         return fig
 
-def plot_metrics(windows, metrics = ['loss', 'mean_absolute_error', 'mean_squared_error', 'mean_absolute_error_denor']):
+def plot_metrics(windows):
     
     multi_train_performance = {}
     multi_performance = {}
@@ -301,17 +301,26 @@ def plot_metrics(windows, metrics = ['loss', 'mean_absolute_error', 'mean_square
     for window in windows:
         multi_train_performance = dict(**multi_train_performance, **window.multi_train_performance)
         multi_performance = dict(**multi_performance, **window.multi_performance)
+        
+        for n, model_metrics in enumerate(window.multi_train_performance.values()):
+            if n==0:
+                m1=list(model_metrics.keys())
+                metrics=m1
+            else:
+                m2=list(model_metrics.keys())
+                metrics = [m for m in m1 if m in set(m2)] #Find common metrics in models
+                m1=m2
 
     nmetrics = len(metrics)
-    x = [key for key in multi_performance.keys()]
+    x = [key for key in multi_performance.keys()] #model tags
 
     fig = go.Figure()
     visible = True
     
     for metric_index, metric_name in enumerate(metrics):
     
-        val_mae = [v[metric_index] for v in multi_train_performance.values()]
-        test_mae = [v[metric_index] for v in multi_performance.values()]
+        val_mae = [v[metric_name] for v in multi_train_performance.values()] #Metrics could be in differents order
+        test_mae = [v[metric_name] for v in multi_performance.values()]
 
         if metric_index!=0:
             visible=False
@@ -336,16 +345,23 @@ def plot_metrics(windows, metrics = ['loss', 'mean_absolute_error', 'mean_square
         if len(words)>1:
             capital=[]
             for word in words:
-                capital.append(word[0].upper())
+                if word != 'denor':
+                    capital.append(word[0].upper())
+                else:
+                    capital.append(' ('+window.label_columns[0]+')')
+ 
             name=''.join(capital)
         else:
             name=words[0][0].upper()+words[0][1:]
+
+        if nmetric==0:
+            fig.update_yaxes(dict(title=name))
 
         buttons.append({'method': 'update',
                         'label': name,
                         'args': [
                                  {'visible': visible},
-                                 {'yaxis': {'ticklabelposition': 'inside'}}
+                                 {'yaxis': {'title': name, 'ticklabelposition': 'inside'}}
                                 ],
                         })
         visible=visibility.copy()

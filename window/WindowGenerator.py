@@ -99,5 +99,5 @@ class WindowGenerator():
         self.multi_train_performance = getattr(self, 'multi_train_performance', {})
         self.multi_performance = getattr(self, 'multi_performance', {})
 
-        self.multi_train_performance[model.name+' '+self.name]=training
-        self.multi_performance[model.name+' '+self.name]=evaluation
+        self.multi_train_performance[model.name+' '+self.name]=dict(zip(model.metrics_names, training))
+        self.multi_performance[model.name+' '+self.name]=dict(zip(model.metrics_names, evaluation))
