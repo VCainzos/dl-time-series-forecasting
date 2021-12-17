@@ -50,15 +50,15 @@ Using the `hp` argument to define the hyperparameters during model creation.
 ```python
 from models.lstm import *
 ```
--MyTuner class
+- MyTuner class
 ```python
 from tuner.Tuner import MyTuner
 ```
--KerasTuner package
+- KerasTuner package
 ```python
 import keras_tuner as kt
 ```
-Create a window object
+Once all needed dependencies have been imported, the following steps can be taken. First, create a window object.
 ```python
 window = WindowGenerator(
     DataFrame,
@@ -66,8 +66,8 @@ window = WindowGenerator(
     label_width=10,
     shift=10,
     label_columns=['output_variable'])
-
-Craete a tuner object of the customized class MyTuner
+```
+Then, create a tuner object of the customized class MyTuner which will be dealing with hyperparameter optimization.
 ```python
 tuner = MyTuner(
     oracle=kt.oracles.RandomSearch(
@@ -76,3 +76,15 @@ tuner = MyTuner(
     hypermodel=build_model_lstm,
     window=window
 )
+```
+Perform the search and build a model with the best configuration
+```python
+best_hps=tuner1.get_best_hyperparameters(num_trials=1)[0]
+LSTM = tuner.hypermodel.build(best_hps)
+```
+
+
+
+
+
+
