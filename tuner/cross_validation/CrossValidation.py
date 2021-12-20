@@ -4,16 +4,35 @@ import numpy as np
 
 
 class CrossValidation:
+    """class to implement cross-validation used in KerasTuner"""
+
     def __init__(self, epochs=5, batch_size=32, folds=3, shuffle=True):
+        """Defines main attributes for the cross-validation
+
+        Args:
+            epochs (int, optional): times data will be processed. Defaults to 5.
+            batch_size (int, optional): data processed after which weights will be updated. Defaults to 32.
+            folds (int, optional): partitions of the training set used for cross-validation. Defaults to 3.
+            shuffle (bool, optional): specifies whether or not shuffle data. Defaults to True.
+        """
         self.epochs = epochs
         self.batch_size = batch_size
         self.folds = folds
         self.shuffle = shuffle
 
     def build(self):
+        """Creates the CrossValidation object"""
         self.kf = KFold(self.folds, shuffle=self.shuffle)
 
     def get_means(self, historial):
+        """Manages the means of the historial results used to plot learning curves
+
+        Args:
+            historial (dict): dictionary with metrics and results
+
+        Returns:
+            means (dict): dictionary with metrics and mean results
+        """
         means = {}
         # Loop for metrics
         for key in historial[0].history.keys():
@@ -25,6 +44,15 @@ class CrossValidation:
         return means
 
     def __call__(self, model, dataset, *args, **kwargs):
+        """Defines the inner computation of the cross-validation
+
+        Args:
+            model (tf.keras.Model): model to perform cross-validation
+            dataset (tf.data): dataset tensor with inputs and labels
+
+        Returns:
+            results (dict): dictionary with metrics and mean results
+        """
 
         self.build()  # Call build method
 
@@ -68,4 +96,5 @@ class CrossValidation:
             )
             # historial.append(history.history['val_mean_absolute_error'])
             historial.append(history)
-        return self.get_means(historial)
+        results = self.get_means(historial)
+        return results

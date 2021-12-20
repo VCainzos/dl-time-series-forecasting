@@ -3,7 +3,24 @@ from .metrics.custom_metrics import mean_absolute_error_denor
 
 
 def build_model_lstm(window):
+    """Wrapper function which passes the window object to the creation function of the Keras model
+
+    Args:
+        window (WindowGenerator): window object
+
+    Returns:
+        model_lstm (function): creation function of the Keras model
+    """
+
     def model_lstm(hp):
+        """Function that creates and returns an lstm model
+
+        Args:
+            hp (kt.engine.hyperparameters.HyperParameters): argument to define the hyperparameters, it is passed automatically by the oracle during model creation
+
+        Returns:
+            lstm_model (tf.keras.Model): Keras model
+        """
         lstm_layers = hp.Int("lstm_layers", 1, 3)
         OUT_STEPS = window.label_width
         lstm_model = tf.keras.models.Sequential(name="LSTM")

@@ -3,6 +3,12 @@ import numpy as np
 
 
 def boxplot(df, title="Data Standarized"):
+    """Plot boxplots for a specified dataset
+
+    Args:
+        df (pandas.DataFrame): dataset specified
+        title (str, optional): title of the graph. Defaults to "Data Standarized".
+    """
 
     fig = go.Figure()
 
@@ -17,6 +23,12 @@ def boxplot(df, title="Data Standarized"):
 
 
 def traces(df, split=0.9):
+    """Plot traces for a specified dataset
+
+    Args:
+        df (pandas.DataFrame): dataset specified
+        split (float, optional): threshold for the training/test set. Defaults to 0.9.
+    """
     fig = go.Figure()
 
     n = len(df)
@@ -164,6 +176,11 @@ def traces(df, split=0.9):
 
 
 def plot_predictions(window):
+    """Plot output predictions according to a specified window
+
+    Args:
+        window (WindowGenerator): window object
+    """
     samples = [i for i in window.test.unbatch().batch(1)]  # make batches of one sample
     # It takes only the last batch (time_sequences, features). All samples of seq. within one batch
     *_, (inputs, labels) = iter(window.test.unbatch().batch(len(samples)))
@@ -255,10 +272,18 @@ def plot_predictions(window):
     fig.update_yaxes({"title": window.label_columns[0] + " (std)"})
 
     fig.show()
-    return
 
 
 def plot_learning(tuner, title="Model"):
+    """Plot learning curves during cross-validation registered in the hyperparameter optimization search by the tuner specified
+
+    Args:
+        tuner (MyTuner): tuner object
+        title (str, optional): title of the graph. Defaults to "Model".
+
+    Returns:
+        fig (plotly.graph_object.Figure): figure object.
+    """
 
     fig = go.Figure()
 
@@ -375,6 +400,14 @@ def plot_learning(tuner, title="Model"):
 
 
 def plot_metrics(windows):
+    """Plot bar chart with model metrics results for a specified set of windows
+
+    Args:
+        windows (list): set of windows used in experiments
+
+    Returns:
+        fig (plotly.graph_object.Figure): figure object
+    """
 
     multi_train_performance = {}
     multi_performance = {}
