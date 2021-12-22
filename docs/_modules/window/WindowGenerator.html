@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>window.WindowGenerator &mdash; dl-time-series-forecasting 1.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> dl-time-series-forecasting
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../userguide/index.html">User's Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../API/index.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">dl-time-series-forecasting</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>window.WindowGenerator</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for window.WindowGenerator</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">from</span> <span class="nn">preprocessing.preprocessing</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+<div class="viewcode-block" id="WindowGenerator"><a class="viewcode-back" href="../../API/window.html#window.WindowGenerator.WindowGenerator">[docs]</a><span class="k">class</span> <span class="nc">WindowGenerator</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Class to create sliding windows</span>
+
+<span class="sd">    .. warning::</span>
+<span class="sd">     param ``label_columns`` expects a list. More than one target feature is supported,</span>
+<span class="sd">     however functions in :mod:`~visualization.visualization` may not work as long as they are defined to deal</span>
+<span class="sd">     with 1-feature-dimension prediction tensors.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">input_width</span><span class="p">,</span> <span class="n">label_width</span><span class="p">,</span> <span class="n">shift</span><span class="p">,</span> <span class="n">label_columns</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Defines attributes for the sliding window object</span>
+
+<span class="sd">        :param df: raw data</span>
+<span class="sd">        :type df: pandas.DataFrame</span>
+<span class="sd">        :param input_width: window size</span>
+<span class="sd">        :type input_width: int</span>
+<span class="sd">        :param label_width: prediction horizon</span>
+<span class="sd">        :type label_width: int</span>
+<span class="sd">        :param shift: offset, difference between last prediction and last input</span>
+<span class="sd">        :type shift: int</span>
+<span class="sd">        :param label_columns: tags of the features to predict</span>
+<span class="sd">        :type label_columns: list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">input_width</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;I/&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">label_width</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;O&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_batch_size</span><span class="p">()</span>  <span class="c1"># Initialize the batch_size</span>
+        <span class="c1"># Store the raw data.</span>
+        <span class="n">train</span><span class="p">,</span> <span class="n">test</span> <span class="o">=</span> <span class="n">split</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1"># And standarized dataframes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_df</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_df</span> <span class="o">=</span> <span class="n">standarize</span><span class="p">(</span><span class="n">train</span><span class="p">,</span> <span class="n">test</span><span class="p">)</span>
+        <span class="c1"># These both wil be used in custom metrics as variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_std</span> <span class="o">=</span> <span class="n">train</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_mean</span> <span class="o">=</span> <span class="n">train</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
+        <span class="c1"># self.val_df = val_df</span>
+
+        <span class="c1"># Work out the label column-indices as pairs key-value of a dictionary.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label_columns</span> <span class="o">=</span> <span class="n">label_columns</span>  <span class="c1"># (used in split_window)</span>
+        <span class="k">if</span> <span class="n">label_columns</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">label_columns_indices</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">name</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">label_columns</span><span class="p">)</span>
+            <span class="p">}</span>
+
+        <span class="c1"># Get the features-indices as pairs key-value of a dictionary (used in function split_window)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">column_indices</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Work out the window parameters.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_width</span> <span class="o">=</span> <span class="n">input_width</span>  <span class="c1"># Number of input values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label_width</span> <span class="o">=</span> <span class="n">label_width</span>  <span class="c1"># Number of predictions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shift</span> <span class="o">=</span> <span class="n">shift</span>  <span class="c1"># This is the difference between the last input and label indices (time into the future -&gt; offset)</span>
+
+        <span class="c1"># (not all the indices through the window must be used in every case)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">total_window_size</span> <span class="o">=</span> <span class="n">input_width</span> <span class="o">+</span> <span class="n">shift</span>
+
+        <span class="c1"># Returns a slice object representing the set of indices specified by range(start, stop, step)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">input_width</span><span class="p">)</span>
+        <span class="c1"># Create an array of slicing input indices</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">total_window_size</span><span class="p">)[</span><span class="bp">self</span><span class="o">.</span><span class="n">input_slice</span><span class="p">]</span>
+        <span class="c1"># Get the label indices</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label_start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_window_size</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_width</span>
+        <span class="c1"># Create slice object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_start</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="c1"># Create an array of slicing label indices</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">total_window_size</span><span class="p">)[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">labels_slice</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="sa">f</span><span class="s2">&quot;Total window size: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">total_window_size</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;Input indices: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">input_indices</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;Label indices: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">label_indices</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;Label column name(s): </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">label_columns</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="WindowGenerator.split_window"><a class="viewcode-back" href="../../API/window.html#window.WindowGenerator.WindowGenerator.split_window">[docs]</a>    <span class="k">def</span> <span class="nf">split_window</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">features</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Splits a raw tensor of samples in inputs and labels using arrays of indices</span>
+
+<span class="sd">        :param features: tensor of time-sequences</span>
+<span class="sd">        :type features: tf.data</span>
+<span class="sd">        :return: dataset tensor of inputs and labels</span>
+<span class="sd">        :rtype: tuple</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">            This function is used to map tensor into inputs and labels in</span>
+<span class="sd">            :attr:`make_dataset`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Split tensor using inputs indices across samples dimension</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">features</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_slice</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="c1"># Split tensor using label indices across samples dimension</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">features</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_slice</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_columns</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Split tensor using label column name across features dimension</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">labels</span><span class="p">[:,</span> <span class="p">:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">column_indices</span><span class="p">[</span><span class="n">name</span><span class="p">]]</span>
+                    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_columns</span>
+                <span class="p">],</span>
+                <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Slicing doesn&#39;t preserve static shape information, so set the shapes manually.</span>
+        <span class="c1"># This way the `tf.data.Datasets` are easier to inspect.</span>
+        <span class="n">inputs</span><span class="o">.</span><span class="n">set_shape</span><span class="p">([</span><span class="kc">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_width</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span>
+        <span class="n">labels</span><span class="o">.</span><span class="n">set_shape</span><span class="p">([</span><span class="kc">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_width</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">labels</span></div>
+
+<div class="viewcode-block" id="WindowGenerator.set_batch_size"><a class="viewcode-back" href="../../API/window.html#window.WindowGenerator.WindowGenerator.set_batch_size">[docs]</a>    <span class="k">def</span> <span class="nf">set_batch_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets batch_size attribute value</span>
+
+<span class="sd">        :param batch_size: number of samples per batch, defaults to 32</span>
+<span class="sd">        :type batch_size: int, optional</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">batch_size</span></div>
+
+<div class="viewcode-block" id="WindowGenerator.make_dataset"><a class="viewcode-back" href="../../API/window.html#window.WindowGenerator.WindowGenerator.make_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">make_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Takes a dataframe and build a tensor dataset of time-sequences</span>
+
+<span class="sd">        :param data: dataframe with time series</span>
+<span class="sd">        :type data: pandas.DataFrame</span>
+<span class="sd">        :return: dataset tensor of inputs and labels</span>
+<span class="sd">        :rtype: tf.data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">timeseries_dataset_from_array</span><span class="p">(</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+            <span class="n">targets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">sequence_length</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">total_window_size</span><span class="p">,</span>
+            <span class="n">sequence_stride</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label_width</span><span class="p">,</span>  <span class="c1"># Using label width as stride to avoid overlapping predictions</span>
+            <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># Doing shuffle here would cause the loss of data sequence missing the tendency, this is not desired</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>  <span class="c1"># Number of time sequences in each batch</span>
+        <span class="p">)</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">split_window</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ds</span>  <span class="c1"># Dataset = batch/&#39;s of tensors</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Property to deal with training dataset</span>
+
+<span class="sd">        :return: training dataset of inputs and labels</span>
+<span class="sd">        :rtype: tf.data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_dataset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_df</span><span class="p">)</span>
+
+        <span class="c1"># Shuffle data before building the Dataset</span>
+        <span class="k">return</span> <span class="n">ds</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ds</span><span class="p">),</span> <span class="n">reshuffle_each_iteration</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="c1"># @property</span>
+    <span class="c1"># def val(self):</span>
+    <span class="c1"># return self.make_dataset(self.val_df)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">test</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Property to deal with test dataset</span>
+
+<span class="sd">        :return: test dataset of inputs and labels</span>
+<span class="sd">        :rtype: tf.data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_dataset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_df</span><span class="p">)</span>
+
+<div class="viewcode-block" id="WindowGenerator.save_model"><a class="viewcode-back" href="../../API/window.html#window.WindowGenerator.WindowGenerator.save_model">[docs]</a>    <span class="k">def</span> <span class="nf">save_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save fitted models in the window object to access easily to them</span>
+
+<span class="sd">        :param model: optimized and trained model</span>
+<span class="sd">        :type model: tf.keras.Model</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">models</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;cv_savings&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span></div>
+
+<div class="viewcode-block" id="WindowGenerator.save_performance"><a class="viewcode-back" href="../../API/window.html#window.WindowGenerator.WindowGenerator.save_performance">[docs]</a>    <span class="k">def</span> <span class="nf">save_performance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">training</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Tracks model performance</span>
+
+<span class="sd">        :param model: optimized and trained model</span>
+<span class="sd">        :type model: tf.keras.Model</span>
+<span class="sd">        :param training: training evaluation results</span>
+<span class="sd">        :type training: dict</span>
+<span class="sd">        :param evaluation: test evaluation results</span>
+<span class="sd">        :type evaluation: dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">multi_train_performance</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;multi_train_performance&quot;</span><span class="p">,</span> <span class="p">{}</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">multi_performance</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;multi_performance&quot;</span><span class="p">,</span> <span class="p">{})</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">multi_train_performance</span><span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="nb">zip</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">metrics_names</span><span class="p">,</span> <span class="n">training</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">multi_performance</span><span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="nb">zip</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">metrics_names</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">)</span>
+        <span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Vcainzos.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

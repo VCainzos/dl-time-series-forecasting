@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tuner &mdash; dl-time-series-forecasting 1.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="visualization" href="visualization.html" />
+    <link rel="prev" title="preprocessing" href="preprocessing.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> dl-time-series-forecasting
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../userguide/index.html">User's Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="models.html">models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing.html">preprocessing</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">tuner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualization.html">visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="window.html">window</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">dl-time-series-forecasting</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="index.html">dl-time-series-forecasting API</a> &raquo;</li>
+      <li>tuner</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/API/tuner.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-tuner.CvTuner">
+<span id="tuner"></span><h1>tuner<a class="headerlink" href="#module-tuner.CvTuner" title="Permalink to this headline"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="tuner.CvTuner.CvTuner">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tuner.CvTuner.</span></span><span class="sig-name descname"><span class="pre">CvTuner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">window</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cv_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tuner/CvTuner.html#CvTuner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuner.CvTuner.CvTuner" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">keras_tuner.engine.tuner.Tuner</span></code></p>
+<p>Subclass of Tuner from KerasTuner to implement cross-validation</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tuner.CvTuner.CvTuner.save_cv">
+<span class="sig-name descname"><span class="pre">save_cv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tuner/CvTuner.html#CvTuner.save_cv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuner.CvTuner.CvTuner.save_cv" title="Permalink to this definition"></a></dt>
+<dd><p>Saves cross-validation and hyperparameters for the current trial</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>history</strong> (<em>dict</em>) – dictionary with metrics and mean results</p></li>
+<li><p><strong>hp</strong> (<em>kt.engine.hyperparameters.HyperParameters</em>) – set of hyperparameters used for the current trial</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-tuner.cross_validation.CrossValidation"></span><dl class="py class">
+<dt class="sig sig-object py" id="tuner.cross_validation.CrossValidation.CrossValidation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tuner.cross_validation.CrossValidation.</span></span><span class="sig-name descname"><span class="pre">CrossValidation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shuffle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tuner/cross_validation/CrossValidation.html#CrossValidation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuner.cross_validation.CrossValidation.CrossValidation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>class to implement cross-validation used in KerasTuner</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tuner.cross_validation.CrossValidation.CrossValidation.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tuner/cross_validation/CrossValidation.html#CrossValidation.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuner.cross_validation.CrossValidation.CrossValidation.build" title="Permalink to this definition"></a></dt>
+<dd><p>Creates the CrossValidation object</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tuner.cross_validation.CrossValidation.CrossValidation.get_means">
+<span class="sig-name descname"><span class="pre">get_means</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">historial</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tuner/cross_validation/CrossValidation.html#CrossValidation.get_means"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tuner.cross_validation.CrossValidation.CrossValidation.get_means" title="Permalink to this definition"></a></dt>
+<dd><p>Manages the means of the historial results used to plot learning curves</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>historial</strong> (<em>dict</em>) – dictionary with metrics and results</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dictionary with metrics and mean resulst</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="preprocessing.html" class="btn btn-neutral float-left" title="preprocessing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="visualization.html" class="btn btn-neutral float-right" title="visualization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Vcainzos.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

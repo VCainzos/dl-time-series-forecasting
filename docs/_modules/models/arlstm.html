@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>models.arlstm &mdash; dl-time-series-forecasting 1.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> dl-time-series-forecasting
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../userguide/index.html">User's Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../API/index.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">dl-time-series-forecasting</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>models.arlstm</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for models.arlstm</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">from</span> <span class="nn">.metrics.custom_metrics</span> <span class="kn">import</span> <span class="n">mean_absolute_error_denor</span>
+
+
+<div class="viewcode-block" id="FeedBack"><a class="viewcode-back" href="../../API/models.html#models.arlstm.FeedBack">[docs]</a><span class="k">class</span> <span class="nc">FeedBack</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class to customized Auto-regressive lstm model behaviour&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hp</span><span class="p">,</span> <span class="n">window</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Define here the architecture of the network</span>
+
+<span class="sd">        :param hp: argument to define the hyperparameters, it is passed automatically by the oracle</span>
+<span class="sd">        :type hp: kt.engine.hyperparameters.HyperParameters</span>
+<span class="sd">        :param window: window object</span>
+<span class="sd">        :type window: WindowGenerator</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;ARLSTM&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outsteps</span> <span class="o">=</span> <span class="n">window</span><span class="o">.</span><span class="n">label_width</span>  <span class="c1"># Get output width</span>
+        <span class="n">warmup_layers</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">Int</span><span class="p">(</span><span class="s2">&quot;warmup_layers&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">units</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">Int</span><span class="p">(</span><span class="s2">&quot;units&quot;</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="c1"># out_steps = 2</span>
+        <span class="c1"># self.out_steps = out_steps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="n">units</span>
+        <span class="c1"># It is necessary for units to be fitted with the previous layer when operating at cell level (*)</span>
+        <span class="c1"># Also, use another cell because it will be computing different input_dim (time_steps)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lstm_cell</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">LSTMCell</span><span class="p">(</span><span class="n">units</span><span class="p">)</span>
+
+        <span class="c1"># Stacking layers during warming-up to achieve a greater level of abstraction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lstm_rnn</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># This is the previous layer of the cell level computation (*)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lstm_rnn_warmup</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">RNN</span><span class="p">(</span>
+            <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">LSTMCell</span><span class="p">(</span><span class="n">units</span><span class="p">),</span> <span class="n">return_state</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="c1"># Also wrap the LSTMCell in an RNN to simplify the `warmup` method.</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">warmup_layers</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lstm_rnn</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">RNN</span><span class="p">(</span>
+                    <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">LSTMCell</span><span class="p">(</span>
+                        <span class="n">hp</span><span class="o">.</span><span class="n">Int</span><span class="p">(</span><span class="s2">&quot;units_rnn_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">layer</span><span class="p">),</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="p">),</span>
+                    <span class="n">return_sequences</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="c1"># Once the warmup is completed, it gives only one output throughout the whole context of the input sample (sequences of data)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dense</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<div class="viewcode-block" id="FeedBack.warmup"><a class="viewcode-back" href="../../API/models.html#models.arlstm.FeedBack.warmup">[docs]</a>    <span class="k">def</span> <span class="nf">warmup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Pre-computation of the inputs after getting horizon predictions</span>
+
+<span class="sd">        :param inputs: tensor of inputs</span>
+<span class="sd">        :type inputs: tf.Tensor</span>
+<span class="sd">        :return: prediction and state from the last time-step</span>
+<span class="sd">        :rtype: tuple</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># inputs.shape =&gt; (batch, time, features)</span>
+
+        <span class="n">x_in</span> <span class="o">=</span> <span class="n">inputs</span>
+        <span class="n">y_out</span> <span class="o">=</span> <span class="n">inputs</span>
+
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lstm_rnn</span><span class="p">:</span>
+            <span class="n">y_out</span> <span class="o">=</span> <span class="n">layer</span><span class="p">(</span><span class="n">x_in</span><span class="p">)</span>
+            <span class="n">x_in</span> <span class="o">=</span> <span class="n">y_out</span>
+
+        <span class="c1"># x.shape =&gt; (batch, lstm_units) return_sequences=False</span>
+        <span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lstm_rnn_warmup</span><span class="p">(</span><span class="n">y_out</span><span class="p">)</span>
+
+        <span class="c1"># predictions.shape =&gt; (batch, features)</span>
+        <span class="n">prediction</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dense</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">prediction</span><span class="p">,</span> <span class="n">state</span></div>
+
+<div class="viewcode-block" id="FeedBack.call"><a class="viewcode-back" href="../../API/models.html#models.arlstm.FeedBack.call">[docs]</a>    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Dealing with inputs to get output predictions</span>
+
+<span class="sd">        :param inputs: tensor of inputs</span>
+<span class="sd">        :type inputs: tf.Tensor</span>
+<span class="sd">        :param training: whether or not to set trainable parameters, defaults to None</span>
+<span class="sd">        :type training: bool, optional</span>
+<span class="sd">        :return: output tensor of predictions</span>
+<span class="sd">        :rtype: tf.Tensor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># out_steps=inputs[1].shape[0] #Get the size of each sample/serie.</span>
+        <span class="c1"># Output shape equal to input for this configuration (automatically, when the model is called)</span>
+        <span class="n">out_steps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">outsteps</span>
+
+        <span class="c1"># Use a TensorArray to capture dynamically unrolled outputs.</span>
+        <span class="n">predictions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Initialize the LSTM state.</span>
+        <span class="n">prediction</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">warmup</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="c1"># Insert the first prediction.</span>
+        <span class="n">predictions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prediction</span><span class="p">)</span>
+
+        <span class="c1"># Run the rest of the prediction steps.</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">out_steps</span><span class="p">):</span>
+            <span class="c1"># Use the last prediction as input.</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">prediction</span>
+            <span class="c1"># Execute one lstm step.</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lstm_cell</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">states</span><span class="o">=</span><span class="n">state</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">)</span>
+            <span class="c1"># Convert the lstm output to a prediction.</span>
+            <span class="n">prediction</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dense</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="c1"># Add the prediction to the output.</span>
+            <span class="n">predictions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prediction</span><span class="p">)</span>
+
+        <span class="c1"># predictions.shape =&gt; (time, batch, features)</span>
+        <span class="n">predictions</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">predictions</span><span class="p">)</span>
+        <span class="c1"># predictions.shape =&gt; (batch, time, features)</span>
+        <span class="n">predictions</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">predictions</span></div></div>
+
+
+<div class="viewcode-block" id="build_model_Feedback"><a class="viewcode-back" href="../../API/models.html#models.arlstm.build_model_Feedback">[docs]</a><span class="k">def</span> <span class="nf">build_model_Feedback</span><span class="p">(</span><span class="n">window</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Wrapper function which passes the window object to the creation function of the Keras model</span>
+
+<span class="sd">    :param window: window object</span>
+<span class="sd">    :type window: WindowGenerator</span>
+<span class="sd">    :return: creation function of the Keras model</span>
+<span class="sd">    :rtype: function</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">       The function :func:`~model_Feedback` that creates and returns a cutomized auto-regressive</span>
+<span class="sd">       lstm model is nested within the Wrapper.</span>
+
+<span class="sd">    .. function:: model_Feedback(hp)</span>
+
+<span class="sd">        Function that creates and returns an auto-regressive lstm model</span>
+
+<span class="sd">        :param hp: argument to define the hyperparameters, it is passed automatically by the oracle</span>
+<span class="sd">        :type hp: kt.engine.hyperparameters.HyperParameters</span>
+<span class="sd">        :return: Keras model</span>
+<span class="sd">        :rtype: FeedBack</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">model_Feedback</span><span class="p">(</span><span class="n">hp</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Function that creates and returns an auto-regressive lstm model</span>
+
+<span class="sd">        :param hp: argument to define the hyperparameters, it is passed automatically by the oracle</span>
+<span class="sd">        :type hp: kt.engine.hyperparameters.HyperParameters</span>
+<span class="sd">        :return: Keras model</span>
+<span class="sd">        :rtype: FeedBack</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">Feedback_model</span> <span class="o">=</span> <span class="n">FeedBack</span><span class="p">(</span><span class="n">hp</span><span class="p">,</span> <span class="n">window</span><span class="p">)</span>
+        <span class="n">Feedback_model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+            <span class="n">loss</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">MeanSquaredError</span><span class="p">(),</span>
+            <span class="n">optimizer</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">Adam</span><span class="p">(),</span>
+            <span class="n">metrics</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">tf</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">MeanAbsoluteError</span><span class="p">(),</span>
+                <span class="n">tf</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">MeanSquaredError</span><span class="p">(),</span>
+                <span class="n">mean_absolute_error_denor</span><span class="p">(</span>
+                    <span class="n">window</span><span class="o">.</span><span class="n">train_std</span><span class="p">,</span> <span class="n">window</span><span class="o">.</span><span class="n">train_mean</span>
+                <span class="p">)(),</span>
+            <span class="p">],</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">Feedback_model</span>
+
+    <span class="k">return</span> <span class="n">model_Feedback</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Vcainzos.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,16 @@
+models
+=======
+
+.. automodule:: models.arlstm
+    :members:
+    :show-inheritance:
+
+.. automodule:: models.lstm
+    :members:
+    :show-inheritance:
+
+.. toctree::
+     :maxdepth: 1
+     :caption: Contents:
+
+     metrics

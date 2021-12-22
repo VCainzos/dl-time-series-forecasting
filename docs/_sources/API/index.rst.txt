@@ -1,0 +1,20 @@
+dl-time-series-forecasting API
+================================
+
+The full public API is delineated below. At this development stage, the **dl-time-series-forecasting** framework
+is being designed to facilitate extensibility to other computational packages to the extent possible.
+
+.. note::
+    Documented or undocumented attributes, functions, methods, etc.
+    named with a leading underscore are **NOT** formally part of the
+    API. Their behavior may change without notice.
+
+.. toctree::
+     :maxdepth: 1
+     :caption: Contents:
+
+     models
+     preprocessing
+     tuner
+     visualization
+     window

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>open &mdash; dl-time-series-forecasting 1.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> dl-time-series-forecasting
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../userguide/index.html">User's Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../API/index.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">dl-time-series-forecasting</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="index.html">Module code</a> &raquo;</li>
+      <li>open</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for open</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot; Module implementing OpenBabel XYZ parsing and interpretation.</span>
+
+<span class="sd">The single class :class:`~opan.xyz.OpanXYZ` imports molecular geometries</span>
+<span class="sd">in the OpenBabel `XYZ format</span>
+<span class="sd">&lt;http://openbabel.org/wiki/XYZ_(format)&gt;`__ |extlink|, with</span>
+<span class="sd">the following variations:</span>
+
+
+
+<span class="sd">**Class Definition**</span>
+
+<span class="sd">.. autofunction:: opanXYZ(object)</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># Imports</span>
+
+
+<span class="c1"># Debug constant</span>
+<span class="n">_DEBUG</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<div class="viewcode-block" id="opanXYZ"><a class="viewcode-back" href="../API/models.html#open.opanXYZ">[docs]</a><span class="k">def</span> <span class="nf">opanXYZ</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Container for OpenBabel XYZ data.</span>
+
+<span class="sd">    Initializer can be called in one of two forms::</span>
+
+<span class="sd">        OpanXYZ(path=&#39;path/to/file&#39;)</span>
+<span class="sd">        OpanXYZ(atom_syms=[{array of atoms}], coords=[{array of coordinates}])</span>
+
+<span class="sd">    If `path` is specified, `atom_syms` and `coords` are ignored, and</span>
+<span class="sd">    the instance will contain all validly</span>
+<span class="sd">    formatted geometries present in the OpenBabel file at the indicated</span>
+<span class="sd">    path.</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">        Certain types of improperly formatted geometry blocks, such as one with</span>
+<span class="sd">        alphabetic characters on the &#39;number-of-atoms&#39; line, may not</span>
+<span class="sd">        raise errors during loading, but instead just result in import of fewer</span>
+<span class="sd">        geometries/frames than expected.</span>
+
+<span class="sd">    If initialized with the `atom_syms` and `coords` keyword arguments,</span>
+<span class="sd">    the instance will contain the single geometry represented by the</span>
+<span class="sd">    provided inputs.</span>
+
+<span class="sd">    In both forms, the optional keyword argument `bohrs` can be specified, to</span>
+<span class="sd">    indicate the units of the coordinates as Bohrs (|True|)</span>
+<span class="sd">    or Angstroms (|False|).</span>
+<span class="sd">    Angstrom and Bohr units are the default for the `path` and</span>
+<span class="sd">    `atom_syms`/`coords` forms,</span>
+<span class="sd">    respectively. The units of all coordinates stored in the instance are</span>
+<span class="sd">    **Bohrs**.</span>
+
+<span class="sd">    &#39;N&#39; and &#39;G&#39; in the below documentation refer to the number of atoms per</span>
+<span class="sd">    geometry and the number of geometries present in the file, respectively.</span>
+<span class="sd">    Note that **ALL** geometries present **MUST** contain the same number</span>
+<span class="sd">    of atoms, and the elements must all **FALL IN THE SAME SEQUENCE**</span>
+<span class="sd">    in each geometry/frame. No error will be raised if positions of</span>
+<span class="sd">    like atoms are swapped, but for obvious reasons this</span>
+<span class="sd">    will almost certainly cause semantic difficulties in downstream</span>
+<span class="sd">    computations.</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">        In |orca| &#39;.xyz&#39; files contain the highest</span>
+<span class="sd">        precision geometry  information of any output (save perhaps</span>
+<span class="sd">        the textual output generated by the program), and are stored</span>
+<span class="sd">        in Angstrom units.</span>
+
+<span class="sd">    |</span>
+
+
+<span class="sd">    .. _instance-variables:</span>
+
+<span class="sd">    **Instance Variables**</span>
+
+<span class="sd">    Except where indicated, all |str| and |list|-of-|str| values are stored as</span>
+<span class="sd">    :data:`LOAD_DATA_FLAG` when initialized with `atom_syms`/`coords`</span>
+<span class="sd">    arguments.</span>
+
+<span class="sd">    .. attribute:: atom_syms</span>
+
+<span class="sd">        length-N |str| -- Atomic symbols for the atoms (all uppercase)</span>
+
+<span class="sd">    .. attribute:: descs</span>
+
+<span class="sd">        length-G |str| -- Text descriptions for each geometry</span>
+<span class="sd">        included in a loaded file</span>
+
+<span class="sd">    .. attribute:: geoms</span>
+
+<span class="sd">        length-G |list| of length-3N |npfloat_| -- Molecular</span>
+<span class="sd">        geometry/geometries read from file or passed to `coords` argument</span>
+
+<span class="sd">    .. attribute:: in_str</span>
+
+<span class="sd">        |str| -- Complete contents of the input file</span>
+
+<span class="sd">    .. attribute:: num_atoms</span>
+
+<span class="sd">        |int| -- Number of atoms per geometry, N</span>
+
+<span class="sd">    .. attribute:: num_geoms</span>
+
+<span class="sd">        |int| -- Number of geometries, G</span>
+
+<span class="sd">    .. attribute:: XYZ_path</span>
+
+<span class="sd">        |str| -- Full path to imported OpenBabel file</span>
+
+<span class="sd">    .. function:: MAE</span>
+
+<span class="sd">        Customized metric function</span>
+
+<span class="sd">        :param y_true: real labels</span>
+<span class="sd">        :type y_true: tf.Tensor</span>
+<span class="sd">        :param y_pred: predicted labels</span>
+<span class="sd">        :type y_pred: tf.Tensor</span>
+<span class="sd">        :return: metric results</span>
+<span class="sd">        :rtype: tf.Tensor</span>
+
+<span class="sd">    &quot;&quot;&quot;</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Vcainzos.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

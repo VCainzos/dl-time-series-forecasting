@@ -1,0 +1,6 @@
+window
+============
+
+.. automodule:: window.WindowGenerator
+    :members:
+    :show-inheritance:

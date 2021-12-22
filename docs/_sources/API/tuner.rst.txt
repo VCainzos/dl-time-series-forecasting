@@ -1,0 +1,10 @@
+tuner
+============
+
+.. automodule:: tuner.CvTuner
+    :members:
+    :show-inheritance:
+
+.. automodule:: tuner.cross_validation.CrossValidation
+    :members:
+    :show-inheritance:
