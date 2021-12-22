@@ -24,8 +24,8 @@ def standarize(train_df, test_df):
     """Centers data with mean 0 and standard deviation 1
 
     .. math::
-            \\mathsf{on1} \\times \\mathsf{on2} =
-            {\\mathsf{normal} \\over \\left\\| \\mathsf{normal}\\right\\|}
+            \\mathsf{x_{nor}} =
+            {\\mathsf{x} - \mu \\over  \sigma}
 
     :param train_df: training data
     :type train_df: pandas.DataFrame
