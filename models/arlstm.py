@@ -1,21 +1,19 @@
 import tensorflow as tf
-from metrics.custom_metrics import MeanAbsoluteErrorDenor
+from .metrics.custom_metrics import mean_absolute_error_denor
 
 
 class FeedBack(tf.keras.Model):
-    """Class to customized Auto-regressive lstm model behaviour
-
-    Args:
-        tf.keras.Model (tf.keras.Model): inheritance of the tf.keras.Model class
-    """
+    """Class to customized Auto-regressive lstm model behaviour"""
 
     def __init__(self, hp, window):
         """Define here the architecture of the network
 
-        Args:
-            hp (kt.engine.hyperparameters.HyperParameters): argument to define the hyperparameters, it is passed automatically by the oracle during model creation
-            window (WindowGenerator): window object
+        :param hp: argument to define the hyperparameters, it is passed automatically by the oracle
+        :type hp: kt.engine.hyperparameters.HyperParameters
+        :param window: window object
+        :type window: WindowGenerator
         """
+
         super().__init__(name="ARLSTM")
         self.outsteps = window.label_width  # Get output width
         warmup_layers = hp.Int("warmup_layers", 0, 3, default=0)
@@ -47,14 +45,14 @@ class FeedBack(tf.keras.Model):
         self.dense = tf.keras.layers.Dense(1)
 
     def warmup(self, inputs):
-        """Pre-computation of the inputs after get horizon predictions
+        """Pre-computation of the inputs after getting horizon predictions
 
-        Args:
-            inputs (tf.Tensor): tensor of inputs
-
-        Returns:
-            prediction, state (tuple): prediction and state from the last time-step
+        :param inputs: tensor of inputs
+        :type inputs: tf.Tensor
+        :return: prediction and state from the last time-step
+        :rtype: tuple
         """
+
         # inputs.shape => (batch, time, features)
 
         x_in = inputs
@@ -72,17 +70,18 @@ class FeedBack(tf.keras.Model):
         return prediction, state
 
     def call(self, inputs, training=None):
-        """Dealing with the inputs to get output predictions
+        """Dealing with inputs to get output predictions
 
-        Args:
-            inputs (tf.Tensor): tensor of inputs
-            training (boolean, optional): arg used to set trainable parameters. Defaults to None
-
-        Returns:
-            predictions (tf.Tensor): output tensor of predictions
+        :param inputs: tensor of inputs
+        :type inputs: tf.Tensor
+        :param training: whether or not to set trainable parameters, defaults to None
+        :type training: bool, optional
+        :return: output tensor of predictions
+        :rtype: tf.Tensor
         """
 
-        # out_steps=inputs[1].shape[0] #Get the size of each sample/serie. Output shape equal to input for this configuration (automatically, when the model is called)
+        # out_steps=inputs[1].shape[0] #Get the size of each sample/serie.
+        # Output shape equal to input for this configuration (automatically, when the model is called)
         out_steps = self.outsteps
 
         # Use a TensorArray to capture dynamically unrolled outputs.
@@ -113,22 +112,25 @@ class FeedBack(tf.keras.Model):
 def build_model_Feedback(window):
     """Wrapper function which passes the window object to the creation function of the Keras model
 
-    Args:
-        window (WindowGenerator): window object
+    :param window: window object
+    :type window: WindowGenerator
+    :return: creation function of the Keras model
+    :rtype: function
 
-    Returns:
-        model_Feedback (function): creation function of the Keras model
+    .. note::
+       The function `model_Feedback(hp)` that creates and returns a cutomized auto-regressive
+       lstm model is nested within the Wrapper.
     """
 
     def model_Feedback(hp):
         """Function that creates and returns an auto-regressive lstm model
 
-        Args:
-            hp (kt.engine.hyperparameters.HyperParameters): argument to define the hyperparameters, it is passed automatically by the oracle during model creation
-
-        Returns:
-            Feedback_model (Feedback): Keras model
+        :param hp: argument to define the hyperparameters, it is passed automatically by the oracle
+        :type hp: kt.engine.hyperparameters.HyperParameters
+        :return: Keras model
+        :rtype: FeedBack
         """
+
         Feedback_model = FeedBack(hp, window)
         Feedback_model.compile(
             loss=tf.losses.MeanSquaredError(),
@@ -136,7 +138,9 @@ def build_model_Feedback(window):
             metrics=[
                 tf.metrics.MeanAbsoluteError(),
                 tf.metrics.MeanSquaredError(),
-                MeanAbsoluteErrorDenor(),
+                mean_absolute_error_denor(
+                    window.train_std, window.train_mean
+                )(),
             ],
         )
         return Feedback_model

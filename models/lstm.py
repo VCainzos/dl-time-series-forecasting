@@ -5,22 +5,25 @@ from .metrics.custom_metrics import mean_absolute_error_denor
 def build_model_lstm(window):
     """Wrapper function which passes the window object to the creation function of the Keras model
 
-    Args:
-        window (WindowGenerator): window object
+    :param window: window object
+    :type window: WindowGenerator
+    :return: creation function of the Keras model
+    :rtype: function
 
-    Returns:
-        model_lstm (function): creation function of the Keras model
+    .. note::
+       The function `model_lstm(hp)` that creates and returns a customized lstm model is nested
+       within the Wrapper.
     """
 
     def model_lstm(hp):
         """Function that creates and returns an lstm model
 
-        Args:
-            hp (kt.engine.hyperparameters.HyperParameters): argument to define the hyperparameters, it is passed automatically by the oracle during model creation
-
-        Returns:
-            lstm_model (tf.keras.Model): Keras model
+        :param hp: argument to define the hyperparameters, it is passed automatically by the oracle during model creation
+        :type hp: kt.engine.hyperparameters.HyperParameters
+        :return: Keras model
+        :rtype: tf.keras.Model
         """
+
         lstm_layers = hp.Int("lstm_layers", 1, 3)
         OUT_STEPS = window.label_width
         lstm_model = tf.keras.models.Sequential(name="LSTM")
@@ -51,7 +54,9 @@ def build_model_lstm(window):
             metrics=[
                 tf.metrics.MeanAbsoluteError(),
                 tf.metrics.MeanSquaredError(),
-                mean_absolute_error_denor(window.train_std, window.train_mean)(),
+                mean_absolute_error_denor(
+                    window.train_std, window.train_mean
+                )(),
             ],
         )
         return lstm_model

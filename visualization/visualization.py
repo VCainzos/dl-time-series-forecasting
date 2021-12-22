@@ -2,12 +2,13 @@ import plotly.graph_objects as go
 import numpy as np
 
 
-def boxplot(df, title="Data Standarized"):
+def boxplot(df, title="Data"):
     """Plot boxplots for a specified dataset
 
-    Args:
-        df (pandas.DataFrame): dataset specified
-        title (str, optional): title of the graph. Defaults to "Data Standarized".
+    :param df: dataset specified
+    :type df: pandas.DataFrame
+    :param title: title of the graph, defaults to "Data"
+    :type title: str, optional
     """
 
     fig = go.Figure()
@@ -25,10 +26,12 @@ def boxplot(df, title="Data Standarized"):
 def traces(df, split=0.9):
     """Plot traces for a specified dataset
 
-    Args:
-        df (pandas.DataFrame): dataset specified
-        split (float, optional): threshold for the training/test set. Defaults to 0.9.
+    :param df: dataset specified
+    :type df: pandas.DataFrame
+    :param split: threshold for the training/test set, defaults to 0.9
+    :type split: float, optional
     """
+
     fig = go.Figure()
 
     n = len(df)
@@ -154,7 +157,11 @@ def traces(df, split=0.9):
                     "args": [
                         {"visible": visibility},
                         # 2. updates to the layout
-                        {"title": "Data", "annotations": annotations, "shapes": shapes},
+                        {
+                            "title": "Data",
+                            "annotations": annotations,
+                            "shapes": shapes,
+                        },
                         # 3. which traces are affected
                         # All (default)
                     ],
@@ -168,7 +175,9 @@ def traces(df, split=0.9):
     ]
 
     # update layout with buttons, and show the figure
-    fig.update_layout(updatemenus=updatemenus, annotations=annotations, shapes=shapes)
+    fig.update_layout(
+        updatemenus=updatemenus, annotations=annotations, shapes=shapes
+    )
     fig.update_xaxes({"title": "Samples"})
     fig.update_yaxes({"title": "Units"})
     # fig.write_html("./images/data.html")
@@ -176,17 +185,21 @@ def traces(df, split=0.9):
 
 
 def plot_predictions(window):
-    """Plot output predictions according to a specified window
+    """Plot output predictions accroding to a specified window
 
-    Args:
-        window (WindowGenerator): window object
+    :param window: window object
+    :type window: WindowGenerator
     """
-    samples = [i for i in window.test.unbatch().batch(1)]  # make batches of one sample
+
+    samples = [
+        i for i in window.test.unbatch().batch(1)
+    ]  # make batches of one sample
     # It takes only the last batch (time_sequences, features). All samples of seq. within one batch
     *_, (inputs, labels) = iter(window.test.unbatch().batch(len(samples)))
     # Total windows=(samples-overlapping)/(window size-overlapping) -> stride=label_width
     samples = len(inputs) * (
-        window.total_window_size - (window.total_window_size - window.label_width)
+        window.total_window_size
+        - (window.total_window_size - window.label_width)
     )
 
     # Initialize figure
@@ -275,14 +288,15 @@ def plot_predictions(window):
 
 
 def plot_learning(tuner, title="Model"):
-    """Plot learning curves during cross-validation registered in the hyperparameter optimization search by the tuner specified
+    """Plot learning curves during cross-validation registered in the hyperparameter
+    optimization search by the tuner specified
 
-    Args:
-        tuner (MyTuner): tuner object
-        title (str, optional): title of the graph. Defaults to "Model".
-
-    Returns:
-        fig (plotly.graph_object.Figure): figure object.
+    :param tuner: tuner object
+    :type tuner: CvTuner
+    :param title: title of the graph, defaults to "Model"
+    :type title: str, optional
+    :return: figure object
+    :rtype: plotly.graph_object.Figure
     """
 
     fig = go.Figure()
@@ -338,12 +352,18 @@ def plot_learning(tuner, title="Model"):
                 domain=dict(x=[0.2, 0.8]),
                 visible=flag,
                 header=dict(
-                    values=[i for i in tuner.cv_savings[str(ntrial + 1)]["hp"].keys()],
+                    values=[
+                        i
+                        for i in tuner.cv_savings[str(ntrial + 1)]["hp"].keys()
+                    ],
                     line_width=0,
                 ),
                 cells=dict(
                     values=[
-                        i for i in tuner.cv_savings[str(ntrial + 1)]["hp"].values()
+                        i
+                        for i in tuner.cv_savings[str(ntrial + 1)][
+                            "hp"
+                        ].values()
                     ],
                     line_width=0,
                 ),
@@ -400,13 +420,12 @@ def plot_learning(tuner, title="Model"):
 
 
 def plot_metrics(windows):
-    """Plot bar chart with model metrics results for a specified set of windows
+    """Plot bar chart with model metric results for a specified set of windows
 
-    Args:
-        windows (list): set of windows used in experiments
-
-    Returns:
-        fig (plotly.graph_object.Figure): figure object
+    :param windows: set of windows specified
+    :type windows: list
+    :return: figure object
+    :rtype: plotly.graph_object.Figure
     """
 
     multi_train_performance = {}
@@ -416,9 +435,13 @@ def plot_metrics(windows):
         multi_train_performance = dict(
             **multi_train_performance, **window.multi_train_performance
         )
-        multi_performance = dict(**multi_performance, **window.multi_performance)
+        multi_performance = dict(
+            **multi_performance, **window.multi_performance
+        )
 
-        for n, model_metrics in enumerate(window.multi_train_performance.values()):
+        for n, model_metrics in enumerate(
+            window.multi_train_performance.values()
+        ):
             if n == 0:
                 m1 = list(model_metrics.keys())
                 metrics = m1

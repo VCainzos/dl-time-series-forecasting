@@ -9,12 +9,16 @@ class CrossValidation:
     def __init__(self, epochs=5, batch_size=32, folds=3, shuffle=True):
         """Defines main attributes for the cross-validation
 
-        Args:
-            epochs (int, optional): times data will be processed. Defaults to 5.
-            batch_size (int, optional): data processed after which weights will be updated. Defaults to 32.
-            folds (int, optional): partitions of the training set used for cross-validation. Defaults to 3.
-            shuffle (bool, optional): specifies whether or not shuffle data. Defaults to True.
+        :param epochs: times data will be processed, defaults to 5
+        :type epochs: int, optional
+        :param batch_size: data processed after which weights will be updated, defaults to 32
+        :type batch_size: int, optional
+        :param folds: partitions of the training set used for cross-validation, defaults to 3
+        :type folds: int, optional
+        :param shuffle: specifies whether or not shuffle data, defaults to True
+        :type shuffle: bool, optional
         """
+
         self.epochs = epochs
         self.batch_size = batch_size
         self.folds = folds
@@ -27,12 +31,12 @@ class CrossValidation:
     def get_means(self, historial):
         """Manages the means of the historial results used to plot learning curves
 
-        Args:
-            historial (dict): dictionary with metrics and results
-
-        Returns:
-            means (dict): dictionary with metrics and mean results
+        :param historial: dictionary with metrics and results
+        :type historial: dict
+        :return: dictionary with metrics and mean resulst
+        :rtype: dict
         """
+
         means = {}
         # Loop for metrics
         for key in historial[0].history.keys():
@@ -46,12 +50,12 @@ class CrossValidation:
     def __call__(self, model, dataset, *args, **kwargs):
         """Defines the inner computation of the cross-validation
 
-        Args:
-            model (tf.keras.Model): model to perform cross-validation
-            dataset (tf.data): dataset tensor with inputs and labels
-
-        Returns:
-            results (dict): dictionary with metrics and mean results
+        :param model: model to perform cross-validation
+        :type model: tf.keras.Model
+        :param dataset: dataset tensor with inputs and labels
+        :type dataset: tf.data
+        :return: dictionary with metrics and mean results
+        :rtype: dict
         """
 
         self.build()  # Call build method
