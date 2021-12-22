@@ -118,8 +118,17 @@ def build_model_Feedback(window):
     :rtype: function
 
     .. note::
-       The function `model_Feedback(hp)` that creates and returns a cutomized auto-regressive
+       The function :func:`~model_Feedback` that creates and returns a cutomized auto-regressive
        lstm model is nested within the Wrapper.
+
+    .. function:: model_Feedback(hp)
+
+        Function that creates and returns an auto-regressive lstm model
+
+        :param hp: argument to define the hyperparameters, it is passed automatically by the oracle
+        :type hp: kt.engine.hyperparameters.HyperParameters
+        :return: Keras model
+        :rtype: FeedBack
     """
 
     def model_Feedback(hp):

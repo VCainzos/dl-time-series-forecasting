@@ -11,8 +11,17 @@ def build_model_lstm(window):
     :rtype: function
 
     .. note::
-       The function `model_lstm(hp)` that creates and returns a customized lstm model is nested
+       The function :func:`~model_lstm` that creates and returns a customized lstm model is nested
        within the Wrapper.
+
+    .. function:: model_lstm(hp)
+
+        Function that creates and returns an lstm model
+
+        :param hp: argument to define the hyperparameters, it is passed automatically by the oracle during model creation
+        :type hp: kt.engine.hyperparameters.HyperParameters
+        :return: Keras model
+        :rtype: tf.keras.Model
     """
 
     def model_lstm(hp):
