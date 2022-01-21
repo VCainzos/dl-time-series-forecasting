@@ -6,8 +6,9 @@ __pycache__/
 *.csv
 # Ignore all ipynb files
 *.ipynb
-# Ignore all py files
-*.py
+# Ignore py files
+main.py
+open.py
 
 # C extensions
 *.so

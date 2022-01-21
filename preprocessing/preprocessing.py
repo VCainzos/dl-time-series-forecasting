@@ -1,4 +1,4 @@
-def split(df, train=0.9):
+def split(df, train=0.8):
     """Divides raw data into training and test set
 
     :param df: raw data

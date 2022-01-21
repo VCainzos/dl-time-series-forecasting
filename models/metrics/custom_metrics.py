@@ -1,5 +1,7 @@
 import tensorflow as tf
+import tensorflow_addons as tfa
 from keras import backend
+import numpy as np
 
 
 def mean_absolute_error_denor(std, mean):
@@ -54,3 +56,69 @@ def mean_absolute_error_denor(std, mean):
             super().__init__(mean_absolute_error_denor, name, dtype=dtype)
 
     return MeanAbsoluteErrorDenor
+
+
+def mean_absolute_percentage_error(std, mean):
+    def mean_absolute_percentage_error(y_true, y_pred):
+        """Customized metric function
+
+        :param y_true: real labels
+        :type y_true: tf.Tensor
+        :param y_pred: predicted labels
+        :type y_pred: tf.Tensor
+        :return: metric results
+        :rtype: tf.Tensor
+        """
+        y_pred = tf.convert_to_tensor(y_pred * std + mean)
+        y_true = tf.cast(y_true * std + mean, y_pred.dtype)
+
+        """if y_true < 1e-7:
+            y_true = y_true + 1e-7"""
+
+        return backend.mean(
+            tf.math.divide_no_nan(
+                tf.abs((y_true - y_pred) * 100), tf.abs(y_true)
+            ),
+            axis=-1,
+        )
+
+    class MeanAbsolutePercentageError(tf.keras.metrics.MeanMetricWrapper):
+        """Subclass to implement the customized metric"""
+
+        def __init__(self, name="mean_absolute_percentage_error", dtype=None):
+            super().__init__(mean_absolute_percentage_error, name, dtype=dtype)
+
+    return MeanAbsolutePercentageError
+
+
+def r_square_error(std, mean):
+    def r_square_error(y_true, y_pred):
+        """Customized metric function
+
+        :param y_true: real labels
+        :type y_true: tf.Tensor
+        :param y_pred: predicted labels
+        :type y_pred: tf.Tensor
+        :return: metric results
+        :rtype: tf.Tensor
+        """
+        y_pred = tf.convert_to_tensor(y_pred)
+        y_true = tf.cast(y_true, y_pred.dtype)
+
+        residual = tf.reduce_sum(tf.square(tf.subtract(y_true, y_pred)))
+        total = tf.reduce_sum(
+            tf.square(tf.subtract(y_true, tf.reduce_mean(y_true)))
+        )
+        """if total < 1e-7:
+            total = total + 1e-7"""
+
+        r2 = tf.subtract(1.0, tf.math.divide_no_nan(residual, total))
+        return r2
+
+    class RSquareError(tf.keras.metrics.MeanMetricWrapper):
+        """Subclass to implement the customized metric"""
+
+        def __init__(self, name="r_square_error", dtype=None):
+            super().__init__(r_square_error, name, dtype=dtype)
+
+    return RSquareError

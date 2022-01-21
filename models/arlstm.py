@@ -1,5 +1,10 @@
 import tensorflow as tf
-from .metrics.custom_metrics import mean_absolute_error_denor
+import tensorflow_addons as tfa
+from .metrics.custom_metrics import (
+    mean_absolute_error_denor,
+    mean_absolute_percentage_error,
+    r_square_error,
+)
 
 
 class FeedBack(tf.keras.Model):
@@ -14,7 +19,7 @@ class FeedBack(tf.keras.Model):
         :type window: WindowGenerator
         """
 
-        super().__init__(name="ARLSTM")
+        super().__init__(name="AR")
         self.outsteps = window.label_width  # Get output width
         warmup_layers = hp.Int("warmup_layers", 0, 3, default=0)
         units = hp.Int("units", 32, 40, step=2)
@@ -147,6 +152,13 @@ def build_model_Feedback(window):
             metrics=[
                 tf.metrics.MeanAbsoluteError(),
                 tf.metrics.MeanSquaredError(),
+                # tf.metrics.RootMeanSquaredError(),
+                tf.metrics.MeanAbsolutePercentageError(),
+                # mean_absolute_percentage_error(
+                #    window.train_std, window.train_mean
+                # )(),
+                tfa.metrics.RSquare(y_shape=(window.label_width, 1)),
+                # r_square_error(window.train_std, window.train_mean)(),
                 mean_absolute_error_denor(
                     window.train_std, window.train_mean
                 )(),

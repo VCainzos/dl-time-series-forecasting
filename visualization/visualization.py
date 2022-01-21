@@ -1,3 +1,4 @@
+import copy
 import plotly.graph_objects as go
 import numpy as np
 
@@ -9,27 +10,68 @@ def boxplot(df, title="Data"):
     :type df: pandas.DataFrame
     :param title: title of the graph, defaults to "Data"
     :type title: str, optional
+    :return: figure object
+    :rtype: plotly.graph_object.Figure
     """
 
     fig = go.Figure()
 
     for col in df.columns:
-        fig.add_trace(go.Box(y=df[col], name=col))
+        fig.add_trace(
+            go.Box(
+                y=df[col],
+                name=col,
+                line=dict(width=10),
+                marker=dict(size=10),
+                showlegend=False,
+            )
+        )
 
-    fig.update_layout({"title": title})
-    fig.update_xaxes({"title": "Variables"})
-    fig.update_yaxes({"title": "Values"})
+    if title == "R2":
+        title = "R<sup>2</sup>"
+
+    annotations = [
+        dict(
+            x=1,
+            y=1,
+            text=title,
+            xref="paper",
+            showarrow=False,
+            yref="paper",
+            xanchor="right",
+            yanchor="top",
+            bgcolor="white",
+        )
+    ]
+
+    fig.update_layout(annotations=annotations)
+
+    fig.update_layout(
+        {
+            "width": 3508,
+            "height": 2480,
+            "font": dict(size=80),
+            "showlegend": False,
+            "margin": dict(l=0, r=0, t=0, b=0),
+        }
+    )
+
+    # fig.update_xaxes({"ticklabelposition": "inside"})
+    # fig.update_yaxes({"ticklabelposition": "inside"})
     # fig.write_html("./images/normalization.html")
-    fig.show()
+    # fig.show()
+    return fig
 
 
-def traces(df, split=0.9):
+def traces(df, split=0.8):
     """Plot traces for a specified dataset
 
     :param df: dataset specified
     :type df: pandas.DataFrame
     :param split: threshold for the training/test set, defaults to 0.9
     :type split: float, optional
+    :return: figure object
+    :rtype: plotly.graph_object.Figure
     """
 
     fig = go.Figure()
@@ -42,7 +84,9 @@ def traces(df, split=0.9):
             go.Scatter(
                 x=df.index[0 : int(n * split)],
                 y=df[col].values[0 : int(n * split)],
-                name=col + " Training",
+                name="",
+                line=dict(width=10),
+                # marker=dict(size=10),
                 visible=True,
                 showlegend=True,
             )
@@ -52,30 +96,32 @@ def traces(df, split=0.9):
             go.Scatter(
                 x=df.index[int(n * split) :],
                 y=df[col].values[int(n * split) :],
-                name=col + " Test",
+                name=col,  # + " Test",
+                line=dict(width=10),
+                # marker=dict(size=10),
                 visible=True,
                 showlegend=True,
             )
         )
 
-    fig.update_layout({"title": "Data"})
+    # fig.update_layout({"title": "Data"})
 
     shapes = [
         dict(
             type="line",
-            x0=int(n * split),
+            x0=df.index[int(n * split)],
             y0=0,
-            x1=int(n * split),
+            x1=df.index[int(n * split)],
             y1=0.95,
             yref="paper",
-            line=dict(color="Red", width=3, dash="dashdot"),
+            line=dict(color="Red", width=10, dash="dashdot"),
         ),
         dict(
             fillcolor="rgba(63, 81, 181, 0.2)",
             line={"width": 0},
             type="rect",
-            x0=0,
-            x1=int(n * split),
+            x0=df.index[0],
+            x1=df.index[int(n * split)],
             xref="x",
             y0=0,
             y1=0.95,
@@ -85,8 +131,8 @@ def traces(df, split=0.9):
             fillcolor="rgba(76, 175, 80, 0.1)",
             line={"width": 0},
             type="rect",
-            x0=int(n * split),
-            x1=n,
+            x0=df.index[int(n * split)],
+            x1=df.index[n - 1],
             xref="x",
             y0=0,
             y1=0.95,
@@ -96,16 +142,16 @@ def traces(df, split=0.9):
 
     annotations = [
         dict(
-            x=int(n * split / 2),
-            y=1.1,
+            x=df.index[int(n * split / 2)],
+            y=1,
             text="Training (" + str(int(split * 100)) + " %)",
             xref="x",
             showarrow=False,
             yref="paper",
         ),
         dict(
-            x=int(n * (split + 1) / 2),
-            y=1.1,
+            x=df.index[int(n * (split + 1) / 2)],
+            y=1,
             text="Test (" + str(round((1 - split) * 100)) + " %)",
             xref="x",
             showarrow=False,
@@ -175,27 +221,42 @@ def traces(df, split=0.9):
     ]
 
     # update layout with buttons, and show the figure
+    fig.update_layout(annotations=annotations, shapes=shapes)
+    # fig.update_xaxes({"title": "Samples"})
+    # fig.update_yaxes({"title": "Units"})
     fig.update_layout(
-        updatemenus=updatemenus, annotations=annotations, shapes=shapes
+        {
+            "width": 3508,
+            "height": 2480,
+            "font": dict(size=80),
+            "margin": dict(l=0, r=0, t=0, b=0),
+            "legend": dict(orientation="h", x=1, xanchor="right"),
+        }
     )
-    fig.update_xaxes({"title": "Samples"})
-    fig.update_yaxes({"title": "Units"})
     # fig.write_html("./images/data.html")
-    fig.show()
+    # fig.show()
+    return fig
 
 
-def plot_predictions(window):
+def plot_predictions(window, group="test"):
     """Plot output predictions accroding to a specified window
 
     :param window: window object
     :type window: WindowGenerator
+    :return: figure object
+    :rtype: plotly.graph_object.Figure
     """
 
-    samples = [
-        i for i in window.test.unbatch().batch(1)
-    ]  # make batches of one sample
+    if group == "test":
+        set = window.test
+        set_df = window.test_df
+    elif group == "full":
+        set = window.full
+        set_df = window.full_df
+
+    samples = [i for i in set.unbatch().batch(1)]  # make batches of one sample
     # It takes only the last batch (time_sequences, features). All samples of seq. within one batch
-    *_, (inputs, labels) = iter(window.test.unbatch().batch(len(samples)))
+    *_, (inputs, labels) = iter(set.unbatch().batch(len(samples)))
     # Total windows=(samples-overlapping)/(window size-overlapping) -> stride=label_width
     samples = len(inputs) * (
         window.total_window_size
@@ -209,17 +270,19 @@ def plot_predictions(window):
     # (label_width=stride)
     labels = np.array(
         [
-            window.test_df.index[n : n + window.label_width]
+            set_df.index[n : n + window.label_width]
             for n in range(window.input_width, samples, window.label_width)
         ]
     ).flatten()
     fig.add_trace(
         go.Scatter(
             x=labels,
-            y=window.test_df[window.label_columns[0]][labels],
-            name="Real",
+            y=set_df[window.label_columns[0]][labels],
+            name='<SPAN STYLE="text-decoration:overline">'
+            + window.label_columns[0]
+            + "</SPAN>",
             mode="lines",
-            line=dict(color="cyan", dash="solid"),
+            line=dict(width=10, dash="solid"),
         )
     )
 
@@ -232,22 +295,40 @@ def plot_predictions(window):
                 go.Scatter(
                     x=labels,
                     y=predictions,
-                    name=name,
-                    visible=False,
+                    name=name + "<sub>" + str(window.input_width) + "</sub>",
+                    # visible=False,
                     mode="lines",
-                    line=dict(color="orange"),
+                    line=dict(width=10),
                 )
             )
 
         # fig.update_traces(visible=True, selector=dict(name=model.name))
 
-        fig.update_layout(
-            title_text="Window horizon: "
-            + str(window.input_width)
-            + "I/"
-            + str(window.label_width)
-            + "O"
+        """fig.update_layout(
+            title=dict(
+                text=(
+                    "Window horizon: "
+                    + str(window.input_width)
+                    + "I/"
+                    + str(window.label_width)
+                    + "O"
+                )
+            )
+        )"""
+
+    annotations = [
+        dict(
+            x=1,
+            y=0.951,
+            text="<i>Input/Label width: " + str(window.input_width) + "</i>",
+            xref="paper",
+            showarrow=False,
+            yref="paper",
+            xanchor="right",
+            yanchor="top",
+            bgcolor="white",
         )
+    ]
 
     # Create a list with traces visibilty
     visibility = [True] + [False] * nmodels
@@ -280,11 +361,23 @@ def plot_predictions(window):
         }
     ]
 
-    fig.update_layout(updatemenus=updatemenus)
-    fig.update_xaxes({"title": "Samples"})
-    fig.update_yaxes({"title": window.label_columns[0] + " (std)"})
+    # fig.update_layout(annotations=annotations)
+    fig.update_layout(
+        {
+            "width": 3508,
+            "height": 2480,
+            "font": dict(size=80),
+            "margin": dict(l=0, r=0, t=0, b=0),
+            "legend": dict(
+                orientation="h", x=1, y=1, xanchor="right", yanchor="top"
+            ),
+        }
+    )
+    # fig.update_xaxes({"title": "Samples"})
+    # fig.update_yaxes({"title": window.label_columns[0] + " (std)"})
 
-    fig.show()
+    # fig.show()
+    return fig
 
 
 def plot_learning(tuner, title="Model"):
@@ -419,7 +512,7 @@ def plot_learning(tuner, title="Model"):
     return fig
 
 
-def plot_metrics(windows):
+def plot_metrics(windows, metric_name, yrange=None, ytitle=""):
     """Plot bar chart with model metric results for a specified set of windows
 
     :param windows: set of windows specified
@@ -458,20 +551,48 @@ def plot_metrics(windows):
     fig = go.Figure()
     visible = True
 
-    for metric_index, metric_name in enumerate(metrics):
+    # for metric_index, metric_name in enumerate(metrics):
 
-        val_mae = [
-            v[metric_name] for v in multi_train_performance.values()
-        ]  # Metrics could be in differents order
-        test_mae = [v[metric_name] for v in multi_performance.values()]
+    val = [
+        v[metric_name] for v in multi_train_performance.values()
+    ]  # Metrics could be in differents order
+    test = [v[metric_name] for v in multi_performance.values()]
 
-        if metric_index != 0:
-            visible = False
+    # if metric_index != 0:
+    #    visible = False
 
-        fig.add_trace(go.Bar(name="Training", y=val_mae, x=x, visible=visible))
-        fig.add_trace(go.Bar(name="Test", y=test_mae, x=x, visible=visible))
+    # Names for the legend
+    words = metric_name.split("_")
+    capital = []
+    for word in words:
+        if word != "denor":
+            capital.append(word[0].upper())
+    name = "".join(capital)
 
-    fig.update_yaxes(dict(ticklabelposition="inside"))
+    if name == "RS":
+        name = "R<sup>2</sup>"
+
+    fig.add_trace(
+        go.Bar(
+            name=name + "<sub>Train</sub>" + ytitle,
+            y=val,
+            x=x,
+            marker_line_width=0,
+        )
+    )
+    fig.add_trace(
+        go.Bar(
+            name=name + "<sub>Test</sub>" + ytitle,
+            y=test,
+            x=x,
+            marker_line_width=0,
+        )
+    )
+
+    if range != None:
+        fig.update_yaxes(range=yrange)
+    """else:
+        fig.update_yaxes(dict(ticklabelposition="inside"))"""
 
     # Create a list with traces visibilty
     visibility = [False] * nmetrics * 2
@@ -498,8 +619,8 @@ def plot_metrics(windows):
         else:
             name = words[0][0].upper() + words[0][1:]
 
-        if nmetric == 0:
-            fig.update_yaxes(dict(title=name))
+        """if nmetric == 0:
+            fig.update_yaxes(dict(title=name))"""
 
         buttons.append(
             {
@@ -524,9 +645,25 @@ def plot_metrics(windows):
         }
     ]
 
-    fig.update_xaxes(title="Models")
-    fig.update_layout({"title": "Metrics"})
-    fig.update_layout(updatemenus=updatemenus)
+    fig.update_layout(
+        {
+            "width": 3508,
+            "height": 2480,
+            "font": dict(size=80),
+            "margin": dict(l=0, r=0, t=0, b=0),
+            "legend": dict(
+                orientation="h",
+                x=1,
+                y=1,
+                xanchor="right",
+                yanchor="top",
+            ),
+        }
+    )
 
-    fig.show()
+    # fig.update_xaxes(title="Models")
+    # fig.update_layout({"title": "Metrics"})
+    # fig.update_layout(updatemenus=updatemenus)
+
+    # fig.show()
     return fig

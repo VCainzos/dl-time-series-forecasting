@@ -6,7 +6,7 @@ import numpy as np
 class CrossValidation:
     """class to implement cross-validation used in KerasTuner"""
 
-    def __init__(self, epochs=5, batch_size=32, folds=3, shuffle=True):
+    def __init__(self, epochs=50, batch_size=32, folds=5, shuffle=True):
         """Defines main attributes for the cross-validation
 
         :param epochs: times data will be processed, defaults to 5
@@ -66,14 +66,14 @@ class CrossValidation:
         y = next(iter(dataset.unbatch().batch(samples)))[1].numpy()
 
         historial = []
-
-        model_aux = model
+        kscores = []
 
         for fold, (train_indices, val_indices) in enumerate(
             self.kf.split(next(iter(dataset.unbatch().batch(samples)))[0])
         ):
+            # Reset model weights at the begining of each fold
+            model.reset_states()
 
-            model = model_aux
             print(f"Fold {fold}")
             x_train = tf.stack(x[train_indices, :, :])
             y_train = tf.stack(y[train_indices, :, :])
@@ -100,5 +100,11 @@ class CrossValidation:
             )
             # historial.append(history.history['val_mean_absolute_error'])
             historial.append(history)
+
+            # Evaluation on validation set
+            kscore = model.evaluate(dataset_val, verbose=0)
+            kscores.append(kscore)
+
         results = self.get_means(historial)
-        return results
+
+        return results, kscores

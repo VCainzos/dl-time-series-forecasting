@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 from preprocessing.preprocessing import *
 
@@ -28,15 +29,18 @@ class WindowGenerator:
         :param label_columns: tags of the features to predict
         :type label_columns: list
         """
-        self.name = str(input_width) + "I/" + str(label_width) + "O"
+        self.name = str(input_width)
         self.set_batch_size()  # Initialize the batch_size
         # Store the raw data.
         train, test = split(df, **kwargs)
         # And standarized dataframes
         self.train_df, self.test_df = standarize(train, test)
+        # Full dataset to predict at last
+        full = pd.concat([self.train_df, self.test_df])
+        self.full_df = full
         # These both wil be used in custom metrics as variables
         self.train_std = train.std()
-        self.train_mean = train.std()
+        self.train_mean = train.mean()
         # self.val_df = val_df
 
         # Work out the label column-indices as pairs key-value of a dictionary.
@@ -154,9 +158,15 @@ class WindowGenerator:
         :rtype: tf.data
         """
         ds = self.make_dataset(self.train_df)
+        # Shuffle all samples
+        samples = len([i for i in ds.unbatch().batch(1)])
+        ds.unbatch().batch(samples).shuffle(
+            samples, reshuffle_each_iteration=False
+        )
+        ds.unbatch().batch(self.batch_size)
 
         # Shuffle data before building the Dataset
-        return ds.shuffle(len(ds), reshuffle_each_iteration=False)
+        return ds  # .shuffle(len(ds), reshuffle_each_iteration=False)
 
     # @property
     # def val(self):
@@ -171,13 +181,22 @@ class WindowGenerator:
         """
         return self.make_dataset(self.test_df)
 
+    @property
+    def full(self):
+        """Property to deal with test dataset
+
+        :return: test dataset of inputs and labels
+        :rtype: tf.data
+        """
+        return self.make_dataset(self.full_df)
+
     def save_model(self, model):
         """Save fitted models in the window object to access easily to them
 
         :param model: optimized and trained model
         :type model: tf.keras.Model
         """
-        self.models = getattr(self, "cv_savings", {})
+        self.models = getattr(self, "models", {})
         self.models[model.name] = model
 
     def save_performance(self, model, training, evaluation):

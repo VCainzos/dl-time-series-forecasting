@@ -1,5 +1,10 @@
 import tensorflow as tf
-from .metrics.custom_metrics import mean_absolute_error_denor
+import tensorflow_addons as tfa
+from .metrics.custom_metrics import (
+    mean_absolute_error_denor,
+    mean_absolute_percentage_error,
+    r_square_error,
+)
 
 
 def build_model_lstm(window):
@@ -35,7 +40,7 @@ def build_model_lstm(window):
 
         lstm_layers = hp.Int("lstm_layers", 1, 3)
         OUT_STEPS = window.label_width
-        lstm_model = tf.keras.models.Sequential(name="LSTM")
+        lstm_model = tf.keras.models.Sequential(name="SS")
         # Shape [batch, time, features] => [batch, time, lstm_units]
         for layer in range(lstm_layers):
             # Stacking lstm layers
@@ -63,6 +68,12 @@ def build_model_lstm(window):
             metrics=[
                 tf.metrics.MeanAbsoluteError(),
                 tf.metrics.MeanSquaredError(),
+                tf.metrics.MeanAbsolutePercentageError(),
+                # mean_absolute_percentage_error(
+                #    window.train_std, window.train_mean
+                # )(),
+                tfa.metrics.RSquare(y_shape=(OUT_STEPS, 1)),
+                # r_square_error(window.train_std, window.train_mean)(),
                 mean_absolute_error_denor(
                     window.train_std, window.train_mean
                 )(),
