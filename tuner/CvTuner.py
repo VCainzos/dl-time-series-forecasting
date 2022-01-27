@@ -34,7 +34,7 @@ class CvTuner(kt.engine.tuner.Tuner):
 
         # Add metrics for the trial number
         self.cv_savings[str(self._display.trial_number)] = dict(
-            history=history, hp=hp
+            history=history, hp=hp, id=trial.trial_id
         )
         self.fold_savings[trial.trial_id] = dict(folds=kscores)
 
@@ -56,12 +56,14 @@ class CvTuner(kt.engine.tuner.Tuner):
         # batch_size=32
 
         hp = trial.hyperparameters
-        model = self._try_build(hp)
+        # model = self._try_build(hp)
         # Manual update to the search space including batch-size variable
         batch_size = hp.Int("batch_size", 32, 40, step=2)
         # Implementation of cross-validation
         cv = CrossValidation(batch_size=batch_size, **self.cv_args)
         # Here are passed the callbacks within *args and **kwargs
-        history_means, kscores = cv(model, self.window.train, *args, **kwargs)
+        history_means, kscores = cv(
+            self, hp, self.window.train, *args, **kwargs
+        )
         self.save_cv(history_means, kscores, hp.values, trial)
         return history_means

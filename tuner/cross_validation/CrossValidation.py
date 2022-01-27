@@ -6,7 +6,7 @@ import numpy as np
 class CrossValidation:
     """class to implement cross-validation used in KerasTuner"""
 
-    def __init__(self, epochs=50, batch_size=32, folds=5, shuffle=True):
+    def __init__(self, epochs=50, batch_size=32, folds=10, shuffle=True):
         """Defines main attributes for the cross-validation
 
         :param epochs: times data will be processed, defaults to 5
@@ -47,7 +47,7 @@ class CrossValidation:
             means[key] = np.mean(key_values, axis=0)
         return means
 
-    def __call__(self, model, dataset, *args, **kwargs):
+    def __call__(self, tuner, hp, dataset, *args, **kwargs):
         """Defines the inner computation of the cross-validation
 
         :param model: model to perform cross-validation
@@ -72,7 +72,14 @@ class CrossValidation:
             self.kf.split(next(iter(dataset.unbatch().batch(samples)))[0])
         ):
             # Reset model weights at the begining of each fold
-            model.reset_states()
+            # model.reset_states()
+
+            # Sets memory free
+            tf.keras.backend.clear_session()
+
+            model = tuner._try_build(
+                hp
+            )  # Compile model at the beginning of each fold
 
             print(f"Fold {fold}")
             x_train = tf.stack(x[train_indices, :, :])
@@ -102,8 +109,14 @@ class CrossValidation:
             historial.append(history)
 
             # Evaluation on validation set
-            kscore = model.evaluate(dataset_val, verbose=0)
-            kscores.append(kscore)
+            # kscore = model.evaluate(dataset_val, verbose=0)
+            kscores.append(
+                [
+                    np.mean(values)
+                    for metric, values in history.history.items()
+                    if "val_" in metric
+                ]
+            )
 
         results = self.get_means(historial)
 

@@ -72,9 +72,6 @@ def mean_absolute_percentage_error(std, mean):
         y_pred = tf.convert_to_tensor(y_pred * std + mean)
         y_true = tf.cast(y_true * std + mean, y_pred.dtype)
 
-        """if y_true < 1e-7:
-            y_true = y_true + 1e-7"""
-
         return backend.mean(
             tf.math.divide_no_nan(
                 tf.abs((y_true - y_pred) * 100), tf.abs(y_true)
@@ -92,6 +89,8 @@ def mean_absolute_percentage_error(std, mean):
 
 
 def r_square_error(std, mean):
+    metric = tfa.metrics.r_square.RSquare()
+
     def r_square_error(y_true, y_pred):
         """Customized metric function
 
@@ -102,6 +101,7 @@ def r_square_error(std, mean):
         :return: metric results
         :rtype: tf.Tensor
         """
+        """
         y_pred = tf.convert_to_tensor(y_pred)
         y_true = tf.cast(y_true, y_pred.dtype)
 
@@ -109,11 +109,16 @@ def r_square_error(std, mean):
         total = tf.reduce_sum(
             tf.square(tf.subtract(y_true, tf.reduce_mean(y_true)))
         )
-        """if total < 1e-7:
-            total = total + 1e-7"""
 
-        r2 = tf.subtract(1.0, tf.math.divide_no_nan(residual, total))
+        r2 = tf.subtract(
+            1.0, tf.math.divide_no_nan(residual, total)
+        )  # divide_no_nan avoids zero-denominators
         return r2
+        """
+        metric.update_state(y_true.numpy().flatten(), y_pred.numpy().flatten())
+        result = metric.result().numpy()
+        metric.reset_state()
+        return np.mean(result)
 
     class RSquareError(tf.keras.metrics.MeanMetricWrapper):
         """Subclass to implement the customized metric"""

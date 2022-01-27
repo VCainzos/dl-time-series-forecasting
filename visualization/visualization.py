@@ -63,7 +63,7 @@ def boxplot(df, title="Data"):
     return fig
 
 
-def traces(df, split=0.8):
+def traces(df, split=0.8, tags=None):
     """Plot traces for a specified dataset
 
     :param df: dataset specified
@@ -79,30 +79,31 @@ def traces(df, split=0.8):
     n = len(df)
     for col in df.columns:
 
-        # Training
-        fig.add_traces(
-            go.Scatter(
-                x=df.index[0 : int(n * split)],
-                y=df[col].values[0 : int(n * split)],
-                name="",
-                line=dict(width=10),
-                # marker=dict(size=10),
-                visible=True,
-                showlegend=True,
+        if tags == None or col in tags:
+            # Training
+            fig.add_traces(
+                go.Scatter(
+                    x=df.index[0 : int(n * split)],
+                    y=df[col].values[0 : int(n * split)],
+                    name="",
+                    line=dict(width=10),
+                    # marker=dict(size=10),
+                    visible=True,
+                    showlegend=True,
+                )
             )
-        )
-        # Test
-        fig.add_traces(
-            go.Scatter(
-                x=df.index[int(n * split) :],
-                y=df[col].values[int(n * split) :],
-                name=col,  # + " Test",
-                line=dict(width=10),
-                # marker=dict(size=10),
-                visible=True,
-                showlegend=True,
+            # Test
+            fig.add_traces(
+                go.Scatter(
+                    x=df.index[int(n * split) :],
+                    y=df[col].values[int(n * split) :],
+                    name=col,  # + " Test",
+                    line=dict(width=10),
+                    # marker=dict(size=10),
+                    visible=True,
+                    showlegend=True,
+                )
             )
-        )
 
     # fig.update_layout({"title": "Data"})
 
@@ -414,7 +415,11 @@ def plot_learning(tuner, title="Model"):
         visible[ntrial * 3 + 1] = True
         visible[ntrial * 3 + 2] = True
 
-        if ntrial > 0:
+        # Only visible the best trial
+        if (
+            tuner.cv_savings[str(ntrial + 1)]["id"]
+            != tuner.oracle.get_best_trials(num_trials=1)[0].trial_id
+        ):
             flag = False
 
         # Traces
@@ -506,7 +511,7 @@ def plot_learning(tuner, title="Model"):
     fig.update_yaxes(title=name)
     fig.update_xaxes(title="Epochs")
     fig.update_layout({"title": title})
-    fig.update_layout(updatemenus=updatemenus)
+    # fig.update_layout(updatemenus=updatemenus)
 
     fig.show()
     return fig
