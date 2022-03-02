@@ -428,10 +428,10 @@ def plot_learning(tuner, title="Model"):
                 y=tuner.cv_savings[str(ntrial + 1)]["history"][
                     tuner.oracle.objective.name
                 ],
-                name="Training",
+                name="MSE<sub>Train</sub>",
                 mode="lines",
                 visible=flag,
-                line=dict(color="cyan", dash="solid"),
+                line=dict(width=10, color="cyan", dash="solid"),
             )
         )
         traces.append(
@@ -439,15 +439,17 @@ def plot_learning(tuner, title="Model"):
                 y=tuner.cv_savings[str(ntrial + 1)]["history"][
                     "val_" + tuner.oracle.objective.name
                 ],
-                name="Validation",
+                name="MSE<sub>Val</sub>",
                 mode="lines",
                 visible=flag,
-                line=dict(color="green", dash="solid"),
+                line=dict(width=10, color="green", dash="solid"),
             )
         )
+
+        # Add table with hyperparameter set
         traces.append(
             go.Table(
-                domain=dict(x=[0.2, 0.8]),
+                domain=dict(x=[0.1, 0.875]),
                 visible=flag,
                 header=dict(
                     values=[
@@ -455,6 +457,7 @@ def plot_learning(tuner, title="Model"):
                         for i in tuner.cv_savings[str(ntrial + 1)]["hp"].keys()
                     ],
                     line_width=0,
+                    height=120,
                 ),
                 cells=dict(
                     values=[
@@ -464,6 +467,7 @@ def plot_learning(tuner, title="Model"):
                         ].values()
                     ],
                     line_width=0,
+                    height=105,
                 ),
             )
         )
@@ -508,12 +512,29 @@ def plot_learning(tuner, title="Model"):
     else:
         name = words[0][0].upper() + words[0][1:]
 
-    fig.update_yaxes(title=name)
+    # Manage layout resolution
+    fig.update_layout(
+        {
+            "width": 3508,
+            "height": 2480,
+            "font": dict(size=80),
+            "margin": dict(l=0, r=0, t=0, b=0),
+            "legend": dict(
+                orientation="v",
+                x=1,
+                y=1,
+                xanchor="right",
+                yanchor="top",
+            ),
+        }
+    )
+
+    # fig.update_yaxes(title=name)
     fig.update_xaxes(title="Epochs")
-    fig.update_layout({"title": title})
+    # fig.update_layout({"title": title})
     # fig.update_layout(updatemenus=updatemenus)
 
-    fig.show()
+    # fig.show()
     return fig
 
 
@@ -574,7 +595,7 @@ def plot_metrics(windows, metric_name, yrange=None, ytitle=""):
             capital.append(word[0].upper())
     name = "".join(capital)
 
-    if name == "RS":
+    if name == "RS" or name == "RSE":
         name = "R<sup>2</sup>"
 
     fig.add_trace(

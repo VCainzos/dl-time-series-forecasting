@@ -159,16 +159,23 @@ class WindowGenerator:
         """
         ds = self.make_dataset(self.train_df)
         # Shuffle all samples
-        """
+
         samples = len([i for i in ds.unbatch().batch(1)])
+        """
         ds.unbatch().batch(samples).shuffle(
             samples, reshuffle_each_iteration=False
         )
         ds.unbatch().batch(self.batch_size)
         """
 
-        # Shuffle data before building the Dataset
-        return ds  # .shuffle(len(ds), reshuffle_each_iteration=False)
+        # Shuffle data before building the Dataset (shuffle method shuffles among batches)
+        return (
+            ds.unbatch()
+            .batch(1)
+            .shuffle(len(samples), reshuffle_each_iteration=False)
+            .unbatch()
+            .batch(self.batch_size)
+        )  # .shuffle(len(ds), reshuffle_each_iteration=False)
 
     # @property
     # def val(self):

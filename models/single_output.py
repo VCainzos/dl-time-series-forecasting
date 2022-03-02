@@ -52,7 +52,7 @@ def build_model_single_output(window):
         :rtype: tf.keras.Model
         """
 
-        lstm_layers = hp.Int("lstm_layers", 1, 3)
+        lstm_layers = hp.Int("lstm_layers", 1, 3, default=1)
         OUT_STEPS = window.label_width
         lstm_model = tf.keras.models.Sequential(name="LSTM")
         # Shape [batch, time, features] => [batch, time, lstm_units]
@@ -64,6 +64,7 @@ def build_model_single_output(window):
                     return_sequences=True,
                 )
             )
+        """
         # Shape => [batch, time,  lstm_units]
         lstm_model.add(
             tf.keras.layers.LSTM(
@@ -71,6 +72,7 @@ def build_model_single_output(window):
                 return_sequences=True,
             )
         )
+        """
         # Shape => [batch, time,  features] (features=1 --> Capacity)
         lstm_model.add(
             tf.keras.layers.Dense(1, kernel_initializer=tf.initializers.zeros())
@@ -84,7 +86,8 @@ def build_model_single_output(window):
             metrics=[
                 tf.metrics.MeanAbsoluteError(),
                 tf.metrics.MeanSquaredError(),
-                tf.metrics.MeanAbsolutePercentageError(),
+                # tf.metrics.MeanAbsolutePercentageError(),
+                tf.metrics.RootMeanSquaredError(),
                 # mean_absolute_percentage_error(
                 #    window.train_std, window.train_mean
                 # )(),

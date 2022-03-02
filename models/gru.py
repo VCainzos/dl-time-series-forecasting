@@ -1,3 +1,4 @@
+from email.policy import default
 import tensorflow as tf
 import tensorflow_addons as tfa
 from .metrics.custom_metrics import (
@@ -52,7 +53,7 @@ def build_model_gru(window):
         :rtype: tf.keras.Model
         """
 
-        gru_layers = hp.Int("gru_layers", 1, 3)
+        gru_layers = hp.Int("gru_layers", 1, 3, default=1)
         OUT_STEPS = window.label_width
         gru_model = tf.keras.models.Sequential(name="GRU")
         # Shape [batch, time, features] => [batch, time, gru_units]
@@ -64,6 +65,7 @@ def build_model_gru(window):
                     return_sequences=True,
                 )
             )
+        """
         # Shape => [batch, time,  gru_units]
         gru_model.add(
             tf.keras.layers.LSTM(
@@ -71,6 +73,7 @@ def build_model_gru(window):
                 return_sequences=True,
             )
         )
+        """
         # Shape => [batch, time,  features] (features=1 --> Capacity)
         gru_model.add(
             tf.keras.layers.Dense(1, kernel_initializer=tf.initializers.zeros())
@@ -84,7 +87,8 @@ def build_model_gru(window):
             metrics=[
                 tf.metrics.MeanAbsoluteError(),
                 tf.metrics.MeanSquaredError(),
-                tf.metrics.MeanAbsolutePercentageError(),
+                # tf.metrics.MeanAbsolutePercentageError(),
+                tf.metrics.RootMeanSquaredError(),
                 # mean_absolute_percentage_error(
                 #    window.train_std, window.train_mean
                 # )(),
